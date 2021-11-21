@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstring>
 #include <unordered_set>
 #include <dirent.h>
 
@@ -27,11 +28,10 @@ class Parser {
  public:
   void Traverse(const std::string&);
   void OpenStream(const std::string&);
-  void Parse(std::string&);
+  void Parse(std::string, std::string);
   void ReadStopWords(const std::string&);
 
-//  Map<std::string, std::vector<std::string>> word_articles_map;
-  std::map<std::string, std::vector<std::string>> word_articles_map;
+  Map<std::string, std::vector<std::string>> word_articles_map;
 
  private:
   std::unordered_set<std::string> stop_words;

@@ -4,7 +4,6 @@
 
 #include "parser.h"
 
-
 void Parser::OpenStream(const std::string &filename) {
   ifs.open(filename);
 
@@ -13,12 +12,12 @@ void Parser::OpenStream(const std::string &filename) {
   document.ParseStream(isw);
 
   std::string text = document["text"].GetString();
-  Parse(text);
+  Parse(text, filename);
 
   ifs.close();
 }
 
-void Parser::Parse(std::string &text) {
+void Parser::Parse(std::string text, std::string filename) {
   if (!text.empty()) {
     char *input = text.data();
     char delimit[] = " \t\r\n\v\f \",.;:~`''!?@#$%^&*()_+*-/\\={}[]|1234567890";
@@ -26,32 +25,36 @@ void Parser::Parse(std::string &text) {
 
     while (token != nullptr) {
       char c;
-      int i = 0;
+      unsigned int i = 0;
       while (token[i]) {
         c = token[i];
-        if (std::isalpha(c)) c = tolower(c);
+        if (std::isalpha(c)) c = static_cast<char>(tolower(c));
         token[i] = c;
         i++;
       }
 
       if (stop_words.find(token) == stop_words.end()) {
-        word_articles_map.insert(std::make_pair(token, std::vector<std::string>()));
+        auto it = word_articles_map.Insert(token);
+//        it->second.emplace_back(filename);
       }
       token = strtok(nullptr, delimit);
     }
   }
 }
 
-void Parser::Traverse(const std::string& directory_path) {
+void Parser::Traverse(const std::string &directory_path) {
   using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
 
   int counter = 1;
   for (auto const &dir_entry: recursive_directory_iterator{directory_path}) {
     if (counter % 10000 == 0) {
-      std::cout << "Files searched: " <<  counter << std::endl;
+      std::cout << "Files searched: " << counter << std::endl;
     }
-    OpenStream(dir_entry.path());
-    counter++;
+
+    if (strcmp(dir_entry.path().extension().c_str(), ".json") == 0) {
+      OpenStream(dir_entry.path());
+      counter++;
+    }
   }
 }
 void Parser::ReadStopWords(const std::string &directory) {

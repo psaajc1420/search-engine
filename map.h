@@ -18,10 +18,21 @@ class Map {
     int height_{};
 
     Node() = default;
-    explicit Node(const K &key, Node *left = nullptr, Node *right = nullptr, int height = 1)
+    explicit Node(const K &key,
+                  Node *left = nullptr,
+                  Node *right = nullptr,
+                  int height = 1)
         : key_{key}, left_{left}, right_{right}, height_{height} {}
-    Node(const K &key, const V &value, Node *left = nullptr, Node *right = nullptr, int height = 1)
-        : key_{key}, value_{value}, left_{left}, right_{right}, height_{height} {}
+    Node(const K &key,
+         const V &value,
+         Node *left = nullptr,
+         Node *right = nullptr,
+         int height = 1)
+        : key_{key},
+          value_{value},
+          left_{left},
+          right_{right},
+          height_{height} {}
   };
   using value_type = std::pair<K, V>;
   using size_type = std::size_t;
@@ -38,7 +49,6 @@ class Map {
     using value_type = ValueType;
     using pointer = ValueType *;
     using reference = ValueType &;
-
 
     explicit MapIterator(Node *root = nullptr) : root_{root} {
       root_pair_ptr_ = nullptr;
@@ -107,21 +117,21 @@ class Map {
   inline bool Empty() const;
   inline void Clear();
 
-  void Inorder() const;
-  void Preorder() const;
-  void Postorder() const;
+  inline void Inorder() const;
+  inline void Preorder() const;
+  inline void Postorder() const;
 
  private:
   Node *root_;
 
-  Node *Insert(Node *, const K &);
-  void Inorder(Node *node) const;
-  void Preorder(Node *node) const;
-  void Postorder(Node *node) const;
+  Node *Insert(Node *&, const K &);
+  inline void Inorder(Node *node) const;
+  inline void Preorder(Node *node) const;
+  inline void Postorder(Node *node) const;
 
-  void Copy(Node *, Node *&);
-  void Clear(Node *&);
-  Node *Find(Node *&, const K &);
+  inline void Copy(Node *, Node *&);
+  inline void Clear(Node *&);
+  inline Node *Find(Node *&, const K &);
 
   // A utility function to get maximum
   // of two integers
@@ -143,6 +153,8 @@ class Map {
 
   // Get Balance factor of node N
   inline int GetBalance(Node *N);
+
+  inline void Balance(Node *&node, const K &key);
 
 };
 
@@ -212,29 +224,37 @@ void Map<K, V>::Clear(Node *&node) {
 
 template<typename K, typename V>
 typename Map<K, V>::Iterator Map<K, V>::Insert(const K &key) {
-  root_ = Insert(root_, key);
-  if (root_ == nullptr) {
+  Node *node = Insert(root_, key);
+  if (node == nullptr) {
     return Iterator(nullptr);
   }
 
-  return Iterator(root_);
+  return Iterator(node);
 }
 
 template<typename K, typename V>
-typename Map<K, V>::Node *Map<K, V>::Insert(Node *node, const K &key) {
+typename Map<K, V>::Node *Map<K, V>::Insert(Node *&node, const K &key) {
   /* 1. Perform the normal BST insertion */
   if (node == nullptr) {
-    return new Node(key);
-  }
-
-  if (key < node->key_)
-    node->left_ = Insert(node->left_, key);
-  else if (key > node->key_)
-    node->right_ = Insert(node->right_, key);
-  else // Equal keys are not allowed in BST
+    node = new Node(key);
+    Balance(node, key);
     return node;
+  } else if (key < node->key_) {
+    Node *newNode = Insert(node->left_, key);
+    Balance(node, key);
+    return newNode;
+  } else if (key > node->key_) {
+    Node *newNode = Insert(node->right_, key);
+    Balance(node, key);
+    return newNode;
+  } else {
+    return node;
+  }
+}
 
-  /* 2. Update height of this ancestor node */
+template<typename K, typename V>
+void Map<K, V>::Balance(Node *&node, const K &key) {
+/* 2. Update height of this ancestor node */
   node->height_ = 1 + Max(Height(node->left_),
                           Height(node->right_));
 
@@ -248,26 +268,23 @@ typename Map<K, V>::Node *Map<K, V>::Insert(Node *node, const K &key) {
 
   // Left Left Case
   if (balance > 1 && key < node->left_->key_)
-    return RightRotate(node);
+    node = RightRotate(node);
 
   // Right Right Case
   if (balance < -1 && key > node->right_->key_)
-    return LeftRotate(node);
+    node = LeftRotate(node);
 
   // Left Right Case
   if (balance > 1 && key > node->left_->key_) {
     node->left_ = LeftRotate(node->left_);
-    return RightRotate(node);
+    node = RightRotate(node);
   }
 
   // Right Left Case
   if (balance < -1 && key < node->right_->key_) {
     node->right_ = RightRotate(node->right_);
-    return LeftRotate(node);
+    node = LeftRotate(node);
   }
-
-  /* return the (unchanged) node pointer */
-  return node;
 }
 
 template<typename K, typename V>
@@ -365,7 +382,7 @@ void Map<K, V>::Preorder() const {
 }
 
 template<typename K, typename V>
-void Map<K, V>::Preorder(Map::Node *node) const {
+void Map<K, V>::Preorder(Node *node) const {
   if (node == nullptr) {
     return;
   }
@@ -381,7 +398,7 @@ void Map<K, V>::Postorder() const {
 }
 
 template<typename K, typename V>
-void Map<K, V>::Postorder(Map::Node *node) const {
+void Map<K, V>::Postorder(Node *node) const {
   if (node == nullptr) {
     return;
   }
