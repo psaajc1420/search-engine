@@ -18,24 +18,24 @@ void Parser::OpenStream(const std::string &filename) {
 }
 
 void Parser::Parse(std::string text, std::string filename) {
+
+  std::unordered_set<std::string> seen_words;
+
   if (!text.empty()) {
     char *input = text.data();
     char delimit[] = " \t\r\n\v\f \",.;:~`''!?@#$%^&*()_+*-/\\={}[]|1234567890";
     char *token = strtok(input, delimit);
 
     while (token != nullptr) {
-      char c;
-      unsigned int i = 0;
-      while (token[i]) {
-        c = token[i];
-        if (std::isalpha(c)) c = static_cast<char>(tolower(c));
-        token[i] = c;
-        i++;
-      }
-
+      RemoveCharacters(token);
       if (stop_words.find(token) == stop_words.end()) {
-        auto it = word_articles_map.Insert(token);
-//        it->second.emplace_back(filename);
+        auto it = word_articles_map.Find(token);
+        if (it == word_articles_map.End()) {
+          auto token_it = word_articles_map.Insert(token);
+          (*token_it).emplace_back(filename);
+        } else {
+          (*it).emplace_back(filename);
+        }
       }
       token = strtok(nullptr, delimit);
     }
@@ -66,5 +66,16 @@ void Parser::ReadStopWords(const std::string &directory) {
   }
 
   infile.close();
+}
+
+void Parser::RemoveCharacters(char* token) {
+  unsigned int i = 0, j = 0;
+  while (token[i]) {
+    if (std::isalpha(token[i])) {
+      token[j++] = static_cast<char>(tolower(token[i]));
+    }
+    i++;
+  }
+  token[j] = '\0';
 }
 

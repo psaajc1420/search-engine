@@ -30,13 +30,12 @@ class Parser {
   void OpenStream(const std::string&);
   void Parse(std::string, std::string);
   void ReadStopWords(const std::string&);
+  void RemoveCharacters(char*);
 
   Map<std::string, std::vector<std::string>> word_articles_map;
 
  private:
   std::unordered_set<std::string> stop_words;
-  std::unordered_set<std::string> seen_words;
-
   std::ifstream ifs;
 };
 
