@@ -82,7 +82,7 @@ class Map {
   using Iterator = MapIterator<value_type>;
   using ConstIterator = MapIterator<const value_type>;
 
-  Map() { root_ = nullptr; }
+  Map();
   Map(const Map &);
   ~Map();
   Map &operator=(const Map &);
@@ -91,6 +91,7 @@ class Map {
   Iterator Find(const K &);
   inline bool Empty() const;
   inline void Clear();
+  inline size_t Size() const;
 
   inline void Inorder() const;
   inline void Preorder() const;
@@ -101,6 +102,7 @@ class Map {
 
  private:
   Node *root_;
+  size_t length_;
 
   void Insert(Node *&, Node *&);
   inline void Inorder(Node *node) const;
@@ -135,6 +137,12 @@ class Map {
   inline void Balance(Node *&node, const K &key);
 
 };
+
+template<typename K, typename V>
+Map<K, V>::Map() {
+  root_ = nullptr;
+  length_ = 0;
+}
 
 template<typename K, typename V>
 Map<K, V>::Map(const Map &map) {
@@ -205,9 +213,11 @@ typename Map<K, V>::Iterator Map<K, V>::Insert(const K &key) {
 
   Node *node = new Node(key);
 
-  if (Find(key) != End()) return Iterator(node);
+  auto it = Find(key);
+  if (it != End()) return it;
 
   Insert(root_, node);
+  length_++;
 
   return Iterator(node);
 }
@@ -395,6 +405,10 @@ typename Map<K,V>::Iterator Map<K, V>::Begin() {
 template<typename K, typename V>
 typename Map<K,V>::Iterator Map<K, V>::End() {
   return Map::Iterator(nullptr);
+}
+template<typename K, typename V>
+size_t Map<K, V>::Size() const {
+  return length_;
 }
 
 #endif //SEARCH_ENGINE__MAP_H_
