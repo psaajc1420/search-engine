@@ -4,3 +4,4 @@ cmake-build-release-coverage/
 cmake-build-relwithdebinfo/
 lib/
 .idea/
+stop_words_english_unix.txt

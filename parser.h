@@ -7,6 +7,8 @@
 
 #include "map.h"
 
+#include <codecvt>
+#include <locale>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -27,54 +29,50 @@
 
 class Parser {
 
+  using convert_t = std::codecvt_utf8<wchar_t>;
  public:
   inline void Traverse(const std::string &);
   inline void OpenStream(const std::string &);
-  inline void Parse(std::string&, const std::string &);
+  inline void Parse(std::string &, const std::string &);
   inline void ReadStopWords(const std::string &);
-  inline void RemoveCharacters(char* token);
-  static inline void Transform(char* token);
+  inline void RemoveCharacters(char *);
+  static inline void Transform(char *);
   static inline std::string StemWord(const std::string &);
 
-  static inline std::wstring s2ws(const std::string &);
-  static inline std::string ws2s(const std::wstring &);
+  static inline std::string ToString(const std::wstring &);
+  static inline std::wstring ToWString(const std::string &);
 
-  Map<std::string, std::vector<std::string>> word_articles_map;
-//    Map<std::string, std::unordered_set<std::string>> word_articles_map;
+  Map<std::string, std::vector<std::string>> word_articles_map_;
+//    Map<std::string, std::unordered_set<std::string>> word_articles_map_;
  private:
-  std::unordered_set<std::string> stop_words;
-  constexpr static char delimit[] = " \t\r\n\v\f \",.;:~`''!?@#$%^&*()_+*-/\\={}[]|1234567890";
-
-//  char readBuffer[60000];
+  std::unordered_set<std::string> stop_words_;
+  constexpr static char delimiter_[] = " \t\r\n\v\f\",.;:~`''!?@#$%^&*()_+*-/=\\{}[]|1234567890";
+  static std::wstring_convert<convert_t, wchar_t> str_converter_;
 };
-
 
 void Parser::OpenStream(const std::string &filename) {
   std::ifstream ifw(filename);
-//  FILE *fp = fopen(filename.c_str(), "r");
   rapidjson::Document document;
   rapidjson::IStreamWrapper isw(ifw);
 
-//  rapidjson::FileReadStream isw(fp, readBuffer, sizeof(readBuffer));
   document.ParseStream(isw);
-//  fclose(fp);
-  std::string&& text = document["text"].GetString();
+  std::string &&text = document["text"].GetString();
   Parse(text, filename);
   ifw.close();
 }
 
-void Parser::Parse(std::string& text, const std::string &filename) {
+void Parser::Parse(std::string &text, const std::string &filename) {
 
   std::unordered_set<std::string> seen_words;
 
   char *input = text.data();
-  char *token = strtok(input, delimit);
+  char *token = strtok(input, delimiter_);
   while (token != nullptr) {
     RemoveCharacters(token);
-    if (stop_words.find(token) == stop_words.end()) {
-      auto it = word_articles_map.Find(token);
-      if (it == word_articles_map.End()) {
-        auto token_it = word_articles_map.Insert(token);
+    if (stop_words_.find(token) == stop_words_.end()) {
+      auto it = word_articles_map_.Find(token);
+      if (it == word_articles_map_.End()) {
+        auto token_it = word_articles_map_.Insert(token);
         (*token_it).emplace_back(filename);
       } else {
         if (seen_words.find(token) == seen_words.end()) {
@@ -83,7 +81,7 @@ void Parser::Parse(std::string& text, const std::string &filename) {
       }
       seen_words.insert(token);
     }
-    token = strtok(nullptr, delimit);
+    token = strtok(nullptr, delimiter_);
   }
 }
 
@@ -108,29 +106,30 @@ void Parser::ReadStopWords(const std::string &directory) {
 
   std::string line;
   while (getline(infile, line)) {
-    stop_words.insert(line);
+    stop_words_.insert(line);
   }
 
   infile.close();
 }
 
-void Parser::RemoveCharacters(char* token) {
+void Parser::RemoveCharacters(char *token) {
   unsigned int i = 0, j = 0;
   while (token[i]) {
     if (std::isalpha(token[i])) {
       token[j++] = static_cast<char>(tolower(token[i]));
+    } else if (std::isdigit(token[i])) {
+      token[j++] = token[i];
     }
     i++;
   }
   token[j] = '\0';
 }
 
-
-void Parser::Transform(char* token) {
+void Parser::Transform(char *token) {
   unsigned int i = 0, j = 0;
-  while (token[i]){
+  while (token[i]) {
     if (std::isalpha(token[i])) {
-      token[j++]  = static_cast<char>(tolower(token[i]));
+      token[j++] = static_cast<char>(tolower(token[i]));
     } else {
       token[j++] = ' ';
     }
@@ -141,25 +140,18 @@ void Parser::Transform(char* token) {
 
 std::string Parser::StemWord(const std::string &token) {
   stemming::english_stem<> StemEnglish;
-  const std::string &ANSIWord(token);
-  std::wstring word = s2ws(ANSIWord);
+  const std::string &ansi_word(token);
+  std::wstring word = ToWString(ansi_word);
   StemEnglish(word);
-  return std::move(ws2s(word));
+  return std::move(ToString(word));
 }
 
-std::wstring Parser::s2ws(const std::string &str) {
-  using convert_typeX = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-  return std::move(converterX.from_bytes(str));
+std::string Parser::ToString(const std::wstring &w_str) {
+  return std::move(str_converter_.to_bytes(w_str));
 }
 
-std::string Parser::ws2s(const std::wstring &wstr) {
-  using convert_typeX = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-  return std::move(converterX.to_bytes(wstr));
+std::wstring Parser::ToWString(const std::string &str) {
+  return std::move(str_converter_.from_bytes(str));
 }
-
 
 #endif //SEARCH_ENGINE__PARSER_H_
