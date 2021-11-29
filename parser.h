@@ -6,6 +6,7 @@
 #define SEARCH_ENGINE__PARSER_H_
 
 #include "map.h"
+#include "tokenizer.h"
 
 #include <codecvt>
 #include <locale>
@@ -36,20 +37,15 @@ class Parser {
   inline void OpenStream(const std::string &);
   inline void Parse(std::string &, const std::string &);
   inline void ReadStopWords(const std::string &);
-  inline void RemoveCharacters(char *);
-  inline void Tokenize(char *);
 
   static inline std::string StemWord(const std::string &);
-  static inline std::string ToString(const std::wstring &);
-  static inline std::wstring ToWString(const std::string &);
 
   Map<std::string, std::vector<std::string>> word_articles_map_;
-//    Map<std::string, std::unordered_set<std::string>> word_articles_map_;
  private:
   std::unordered_set<std::string> stop_words_;
-//  constexpr static char delimiter_[] = " \t\r\n\v\f\",.;:~`''!?@#$%^&*()_+*-/=\\{}[]|1234567890";
   constexpr static char delimiter_[] = " \t\r\n\v\f";
   static std::wstring_convert<convert_t, wchar_t> str_converter_;
+  Tokenizer tokenizer_;
 };
 
 void Parser::OpenStream(const std::string &filename) {
@@ -66,11 +62,12 @@ void Parser::OpenStream(const std::string &filename) {
 void Parser::Parse(std::string &text, const std::string &filename) {
 
   std::unordered_set<std::string> seen_words;
+  tokenizer_.Tokenize(text);
   char* input = text.data();
   char *token = strtok(input, delimiter_);
   while (token != nullptr) {
     if (stop_words_.find(token) == stop_words_.end()) {
-      RemoveCharacters(token);
+
       auto it = word_articles_map_.Find(token);
       if (it == word_articles_map_.End()) {
         auto token_it = word_articles_map_.Insert(token);
@@ -96,6 +93,7 @@ void Parser::Traverse(const std::string &directory_path) {
     }
 
     if (strcmp(dir_entry.path().extension().c_str(), ".json") == 0) {
+
       OpenStream(dir_entry.path());
       counter++;
     }
@@ -113,36 +111,13 @@ void Parser::ReadStopWords(const std::string &directory) {
   infile.close();
 }
 
-void Parser::RemoveCharacters(char *token) {
-  unsigned int i = 0, j = 0;
-  while (token[i]) {
-    if (std::isalpha(token[i])) {
-      token[j++] = static_cast<char>(tolower(token[i]));
-    } else if (std::isdigit(token[i])) {
-      token[j++] = token[i];
-    }
-    i++;
-  }
-  token[j] = '\0';
-}
 
 std::string Parser::StemWord(const std::string &token) {
   stemming::english_stem<> StemEnglish;
-  const std::string &ansi_word(token);
-  std::wstring word = ToWString(ansi_word);
+  const std::string& ansi_word(token);
+  std::wstring word = std::move(str_converter_.from_bytes(ansi_word));
   StemEnglish(word);
-  return std::move(ToString(word));
-}
-
-std::string Parser::ToString(const std::wstring &w_str) {
-  return std::move(str_converter_.to_bytes(w_str));
-}
-
-std::wstring Parser::ToWString(const std::string &str) {
-  return std::move(str_converter_.from_bytes(str));
-}
-void Parser::Tokenize(char* text) {
-
+  return std::move(str_converter_.to_bytes(word));
 }
 
 #endif //SEARCH_ENGINE__PARSER_H_
