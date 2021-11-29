@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <cstring>
+#include <regex>
 #include <unordered_set>
 #include <dirent.h>
 
@@ -36,9 +37,9 @@ class Parser {
   inline void Parse(std::string &, const std::string &);
   inline void ReadStopWords(const std::string &);
   inline void RemoveCharacters(char *);
-  static inline void Transform(char *);
-  static inline std::string StemWord(const std::string &);
+  inline void Tokenize(char *);
 
+  static inline std::string StemWord(const std::string &);
   static inline std::string ToString(const std::wstring &);
   static inline std::wstring ToWString(const std::string &);
 
@@ -46,7 +47,8 @@ class Parser {
 //    Map<std::string, std::unordered_set<std::string>> word_articles_map_;
  private:
   std::unordered_set<std::string> stop_words_;
-  constexpr static char delimiter_[] = " \t\r\n\v\f\",.;:~`''!?@#$%^&*()_+*-/=\\{}[]|1234567890";
+//  constexpr static char delimiter_[] = " \t\r\n\v\f\",.;:~`''!?@#$%^&*()_+*-/=\\{}[]|1234567890";
+  constexpr static char delimiter_[] = " \t\r\n\v\f";
   static std::wstring_convert<convert_t, wchar_t> str_converter_;
 };
 
@@ -64,12 +66,11 @@ void Parser::OpenStream(const std::string &filename) {
 void Parser::Parse(std::string &text, const std::string &filename) {
 
   std::unordered_set<std::string> seen_words;
-
-  char *input = text.data();
+  char* input = text.data();
   char *token = strtok(input, delimiter_);
   while (token != nullptr) {
-    RemoveCharacters(token);
     if (stop_words_.find(token) == stop_words_.end()) {
+      RemoveCharacters(token);
       auto it = word_articles_map_.Find(token);
       if (it == word_articles_map_.End()) {
         auto token_it = word_articles_map_.Insert(token);
@@ -125,19 +126,6 @@ void Parser::RemoveCharacters(char *token) {
   token[j] = '\0';
 }
 
-void Parser::Transform(char *token) {
-  unsigned int i = 0, j = 0;
-  while (token[i]) {
-    if (std::isalpha(token[i])) {
-      token[j++] = static_cast<char>(tolower(token[i]));
-    } else {
-      token[j++] = ' ';
-    }
-    i++;
-  }
-  token[j] = '\0';
-}
-
 std::string Parser::StemWord(const std::string &token) {
   stemming::english_stem<> StemEnglish;
   const std::string &ansi_word(token);
@@ -152,6 +140,9 @@ std::string Parser::ToString(const std::wstring &w_str) {
 
 std::wstring Parser::ToWString(const std::string &str) {
   return std::move(str_converter_.from_bytes(str));
+}
+void Parser::Tokenize(char* text) {
+
 }
 
 #endif //SEARCH_ENGINE__PARSER_H_
