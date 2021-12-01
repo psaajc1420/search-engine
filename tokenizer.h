@@ -17,13 +17,11 @@ class Tokenizer {
  public:
   void Tokenize(std::string&);
   void StartQuotes(std::string&);
-  void EndQuotes();
-  void Punctuation();
+  void EndQuotes(std::string&);
+  void Punctuation(std::string&);
 
  private:
   std::wstring_convert<convert_t, wchar_t> str_converter_;
-
-
 
 };
 
