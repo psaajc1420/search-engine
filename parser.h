@@ -8,20 +8,16 @@
 #include "map.h"
 #include "tokenizer.h"
 
-#include <codecvt>
 #include <locale>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <map>
 #include <cstring>
-#include <regex>
 #include <unordered_set>
-#include <dirent.h>
 
-#include "olestem/stemming/english_stem.h"
+#include "porter2_stemmer/porter2_stemmer.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
@@ -31,55 +27,60 @@
 
 class Parser {
 
-  using convert_t = std::codecvt_utf8<wchar_t>;
  public:
   inline void Traverse(const std::string &);
-  inline void OpenStream(const std::string &);
-  inline void Parse(std::string &, const std::string &);
+  inline void OpenStream(const std::string &, int);
+  inline void Parse(std::string &, int);
   inline void ReadStopWords(const std::string &);
 
-  static inline std::string StemWord(const std::string &);
-
-  Map<std::string, std::vector<std::string>> word_articles_map_;
+  Map<std::string, std::vector<int>> word_articles_map_;
+  Map<int, std::string> id_to_word_map_;
  private:
   std::unordered_set<std::string> stop_words_;
   constexpr static char delimiter_[] = " \t\r\n\v\f";
-  static std::wstring_convert<convert_t, wchar_t> str_converter_;
   Tokenizer tokenizer_;
+
+  int num_words{0};
 };
 
-void Parser::OpenStream(const std::string &filename) {
+void Parser::OpenStream(const std::string &filename, int id) {
   std::ifstream ifw(filename);
   rapidjson::Document document;
   rapidjson::IStreamWrapper isw(ifw);
 
   document.ParseStream(isw);
   std::string &&text = document["text"].GetString();
-  Parse(text, filename);
+  Parse(text, id);
   ifw.close();
 }
 
-void Parser::Parse(std::string &text, const std::string &filename) {
+void Parser::Parse(std::string &text, int id) {
 
   std::unordered_set<std::string> seen_words;
-  tokenizer_.Tokenize(text);
+//  tokenizer_.Tokenize(text);
+//  text = tokenizer_.WordTokenize(text);
+  tokenizer_.RegexTokenize(text);
   char* input = text.data();
-  char *token = strtok(input, delimiter_);
-  while (token != nullptr) {
+  char *token_c_str = strtok(input, delimiter_);
+  while (token_c_str != nullptr) {
+    std::string token = token_c_str;
     if (stop_words_.find(token) == stop_words_.end()) {
+      Porter2Stemmer::stem(token);
+      Porter2Stemmer::trim(token);
 
       auto it = word_articles_map_.Find(token);
       if (it == word_articles_map_.End()) {
         auto token_it = word_articles_map_.Insert(token);
-        (*token_it).emplace_back(filename);
+        (*token_it).emplace_back(id);
+        num_words++;
       } else {
         if (seen_words.find(token) == seen_words.end()) {
-          (*it).emplace_back(filename);
+          (*it).emplace_back(id);
         }
       }
       seen_words.insert(token);
     }
-    token = strtok(nullptr, delimiter_);
+    token_c_str = strtok(nullptr, delimiter_);
   }
 }
 
@@ -93,8 +94,8 @@ void Parser::Traverse(const std::string &directory_path) {
     }
 
     if (strcmp(dir_entry.path().extension().c_str(), ".json") == 0) {
-
-      OpenStream(dir_entry.path());
+      OpenStream(dir_entry.path(), counter);
+      *id_to_word_map_.Insert(counter) = dir_entry.path();
       counter++;
     }
   }
@@ -109,15 +110,6 @@ void Parser::ReadStopWords(const std::string &directory) {
   }
 
   infile.close();
-}
-
-
-std::string Parser::StemWord(const std::string &token) {
-  stemming::english_stem<> StemEnglish;
-  const std::string& ansi_word(token);
-  std::wstring word = std::move(str_converter_.from_bytes(ansi_word));
-  StemEnglish(word);
-  return std::move(str_converter_.to_bytes(word));
 }
 
 #endif //SEARCH_ENGINE__PARSER_H_

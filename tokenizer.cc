@@ -3,6 +3,26 @@
 //
 
 #include "tokenizer.h"
+
+std::string Tokenizer::WordTokenize(std::string &text) {
+  std::string new_text;
+  for (int i = 0; i < text.length(); i++) {
+    if (std::isalpha(text[i])) {
+      new_text += static_cast<char>(std::tolower(text[i]));
+    } else {
+      if (text[i] == ' ' || text[i] == '\'') {
+        new_text += text[i];
+      } else {
+        new_text += " ";
+        new_text += text[i];
+        new_text += " ";
+      }
+    }
+  }
+
+  return std::move(new_text);
+}
+
 void Tokenizer::Tokenize(std::string &text) {
   StartQuotes(text);
   Punctuation(text);
@@ -69,7 +89,7 @@ void Tokenizer::Punctuation(std::string &text) {
 
   text = std::move(std::regex_replace(text,
                                       std::regex(
-                                          R"(([^\.])(\.)([\]\)}>"\'' "»”’ " r"]*)\s*$)"),
+                                          R"prefix(([^\.])(\.)([\]\)}>"\'' "»”’ " r"]*)\s*$)prefix"),
                                       R"prefix($1 $2 $3 )prefix"));
 
   text = std::move(std::regex_replace(text,
@@ -103,4 +123,12 @@ void Tokenizer::Punctuation(std::string &text) {
   text = std::move(std::regex_replace(text,
                                       std::regex(R"([*])"),
                                       R"prefix( $& )prefix"));
+}
+
+void Tokenizer::RegexTokenize(std::string &text) {
+
+  text = std::move(std::regex_replace(text,
+                                      std::regex(R"prefix(([^a-zA-Z]+))prefix"),
+                                      R"prefix( $1 )prefix"));
+
 }
