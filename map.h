@@ -6,35 +6,25 @@
 #define SEARCH_ENGINE__MAP_H_
 
 #include <iostream>
+#include <stack>
 #include <utility>
 
 template<typename K, typename V>
 class Map {
   struct Node {
-    K key_;
-    V value_;
+    std::pair<const K, V> node_pair_;
     Node *left_;
     Node *right_;
     int height_{};
 
     Node() = default;
-    explicit Node(const K &key,
+    explicit Node(const std::pair<const K, V> &node_pair,
                   Node *left = nullptr,
                   Node *right = nullptr,
                   int height = 1)
-        : key_{key}, left_{left}, right_{right}, height_{height} {}
-    Node(const K &key,
-         const V &value,
-         Node *left = nullptr,
-         Node *right = nullptr,
-         int height = 1)
-        : key_{key},
-          value_{value},
-          left_{left},
-          right_{right},
-          height_{height} {}
+        : node_pair_{node_pair}, left_{left}, right_{right}, height_{height} {}
   };
-  using value_type = V;
+  using value_type = std::pair<const K, V>;
   using size_type = std::size_t;
   using reference = value_type &;
   using const_reference = const value_type *;
@@ -50,33 +40,56 @@ class Map {
     using pointer = ValueType *;
     using reference = ValueType &;
 
-    explicit MapIterator(Node *root = nullptr) : root_{root} {}
-    MapIterator(const MapIterator&) = default;
-    MapIterator& operator=(const MapIterator&) = default;
+    explicit MapIterator(Node *curr) : curr_{nullptr} {
+      Fill(curr);
+      if (!min_.empty()) {
+        curr_ = min_.top();
+        min_.pop();
+      }
+    }
+    MapIterator(const MapIterator &) = default;
+    MapIterator &operator=(const MapIterator &) = default;
     ~MapIterator() = default;
 
     reference operator*() {
-      return root_->value_;
+      return curr_->node_pair_;
     }
 
     pointer operator->() {
-//      return root_->value_;
+      return &curr_->node_pair_;
     }
 
     SelfType operator++() {
-
+      if (min_.empty()) {
+        curr_ = nullptr;
+      } else {
+        curr_ = min_.top();
+        min_.pop();
+        if (curr_->right_ != nullptr) {
+          Fill(curr_->right_);
+        }
+      }
+      return *this;
     }
 
     friend bool operator==(const MapIterator &lhs, const MapIterator &rhs) {
-      return lhs.root_ == rhs.root_;
+      return lhs.curr_ == rhs.curr_;
     }
 
     friend bool operator!=(const MapIterator &lhs, const MapIterator &rhs) {
-      return lhs.root_ != rhs.root_;
+      return lhs.curr_ != rhs.curr_;
     }
 
    private:
-    Node *root_;
+    void Fill(Node *curr) {
+      while (curr != nullptr) {
+        min_.push(curr);
+        curr = curr->left_;
+      }
+    }
+
+    Node *curr_;
+    std::stack<Node *> min_;
   };
  public:
   using Iterator = MapIterator<value_type>;
@@ -87,8 +100,11 @@ class Map {
   ~Map();
   Map &operator=(const Map &);
 
-  Iterator Insert(const K &);
+  std::pair<Iterator, bool> Insert(const std::pair<const K, V> &);
+  V &operator[](const K &key);
   Iterator Find(const K &);
+  ConstIterator Find(const K &key) const;
+
   inline bool Empty() const;
   inline void Clear();
   inline size_t Size() const;
@@ -98,11 +114,15 @@ class Map {
   inline void Postorder() const;
 
   Iterator Begin();
+  ConstIterator CBegin() const;
   Iterator End();
+  ConstIterator CEnd() const;
 
  private:
   Node *root_;
   size_t length_;
+
+  void Init();
 
   void Insert(Node *&, Node *&);
   inline void Inorder(Node *node) const;
@@ -146,6 +166,7 @@ Map<K, V>::Map() {
 
 template<typename K, typename V>
 Map<K, V>::Map(const Map &map) {
+  Init();
   Copy(map.root_, root_);
 }
 
@@ -164,6 +185,12 @@ Map<K, V>::~Map() {
 }
 
 template<typename K, typename V>
+void Map<K, V>::Init() {
+  root_ = nullptr;
+  length_ = 0;
+}
+
+template<typename K, typename V>
 typename Map<K, V>::Iterator Map<K, V>::Find(const K &key) {
   Node *node = Find(root_, key);
   if (node == nullptr) {
@@ -174,11 +201,21 @@ typename Map<K, V>::Iterator Map<K, V>::Find(const K &key) {
 }
 
 template<typename K, typename V>
+typename Map<K, V>::ConstIterator Map<K, V>::Find(const K &key) const {
+  Node *node = Find(root_, key);
+  if (node == nullptr) {
+    return ConstIterator(nullptr);
+  }
+
+  return ConstIterator(node);
+}
+
+template<typename K, typename V>
 typename Map<K, V>::Node *Map<K, V>::Find(Node *&node, const K &key) {
-  if (node == nullptr || node->key_ == key) {
+  if (node == nullptr || node->node_pair_.first == key) {
     return node;
   }
-  if (key < node->key_) {
+  if (key < node->node_pair_.first) {
     return Find(node->left_, key);
   }
 
@@ -193,6 +230,7 @@ bool Map<K, V>::Empty() const {
 template<typename K, typename V>
 void Map<K, V>::Clear() {
   Clear(root_);
+  Init();
 }
 
 template<typename K, typename V>
@@ -205,34 +243,48 @@ void Map<K, V>::Clear(Node *&node) {
   Clear(node->right_);
 
   delete node;
-  node = nullptr;
 }
 
 template<typename K, typename V>
-typename Map<K, V>::Iterator Map<K, V>::Insert(const K &key) {
+V &Map<K, V>::operator[](const K &key) {
 
-  Node *node = new Node(key);
+  Node *node = Find(root_, key);
+  if (node != nullptr) return node->node_pair_.second;
 
-  auto it = Find(key);
-  if (it != End()) return it;
+  node = new Node(std::make_pair(key, V()));
 
   Insert(root_, node);
   length_++;
 
-  return Iterator(node);
+  return node->node_pair_.second;
 }
 
 template<typename K, typename V>
-void Map<K, V>::Insert(Node *&node, Node*& new_node) {
+typename std::pair<typename Map<K, V>::Iterator, bool> Map<K, V>::Insert(
+    const std::pair<const K, V> &node_pair) {
+
+  Node *node = Find(root_, node_pair.first);
+  if (node != nullptr) return std::make_pair(Iterator(node), false);
+
+  node = new Node(node_pair);
+
+  Insert(root_, node);
+  length_++;
+
+  return std::make_pair(Iterator(node), true);
+}
+
+template<typename K, typename V>
+void Map<K, V>::Insert(Node *&node, Node *&new_node) {
   /* 1. Perform the normal BST insertion */
   if (node == nullptr) {
     node = new_node;
-  } else if (new_node->key_ < node->key_) {
+  } else if (new_node->node_pair_.first < node->node_pair_.first) {
     Insert(node->left_, new_node);
-  } else if (new_node->key_ > node->key_) {
+  } else if (new_node->node_pair_.first > node->node_pair_.first) {
     Insert(node->right_, new_node);
   }
-  Balance(node, new_node->key_);
+  Balance(node, new_node->node_pair_.first);
 }
 
 template<typename K, typename V>
@@ -250,26 +302,26 @@ void Map<K, V>::Balance(Node *&node, const K &key) {
   // there are 4 cases
 
   // Left Left Case
-  if (balance > 1 && key < node->left_->key_) {
+  if (balance > 1 && key < node->left_->node_pair_.first) {
     node = RightRotate(node);
     return;
   }
 
   // Right Right Case
-  if (balance < -1 && key > node->right_->key_) {
+  if (balance < -1 && key > node->right_->node_pair_.first) {
     node = LeftRotate(node);
     return;
   }
 
   // Left Right Case
-  if (balance > 1 && key > node->left_->key_) {
+  if (balance > 1 && key > node->left_->node_pair_.first) {
     node->left_ = LeftRotate(node->left_);
     node = RightRotate(node);
     return;
   }
 
   // Right Left Case
-  if (balance < -1 && key < node->right_->key_) {
+  if (balance < -1 && key < node->right_->node_pair_.first) {
     node->right_ = RightRotate(node->right_);
     node = LeftRotate(node);
     return;
@@ -282,12 +334,11 @@ void Map<K, V>::Copy(Node *orig_node, Node *&node) {
     return;
   }
 
-  node = new Node(orig_node->key_,
-                  orig_node->left_,
-                  orig_node->right_);
-
+  node = new Node(orig_node->node_pair_, orig_node->left_, orig_node->right_);
+  length_++;
   Copy(orig_node->left_, node->left_);
   Copy(orig_node->right_, node->right_);
+
 }
 
 template<typename K, typename V>
@@ -312,10 +363,8 @@ typename Map<K, V>::Node *Map<K, V>::RightRotate(Node *y) {
   y->left_ = T2;
 
   // Update heights
-  y->height_ = Max(Height(y->left_),
-                   Height(y->right_)) + 1;
-  x->height_ = Max(Height(x->left_),
-                   Height(x->right_)) + 1;
+  y->height_ = Max(Height(y->left_), Height(y->right_)) + 1;
+  x->height_ = Max(Height(x->left_), Height(x->right_)) + 1;
 
   // Return new root
   return x;
@@ -331,10 +380,8 @@ typename Map<K, V>::Node *Map<K, V>::LeftRotate(Node *x) {
   x->right_ = T2;
 
   // Update heights
-  x->height_ = Max(Height(x->left_),
-                   Height(x->right_)) + 1;
-  y->height_ = Max(Height(y->left_),
-                   Height(y->right_)) + 1;
+  x->height_ = Max(Height(x->left_), Height(x->right_)) + 1;
+  y->height_ = Max(Height(y->left_), Height(y->right_)) + 1;
 
   // Return new root
   return y;
@@ -360,7 +407,7 @@ void Map<K, V>::Inorder(Node *node) const {
   }
 
   Inorder(node->left_);
-  std::cout << node->key_ << " ";
+  std::cout << node->node_pair_.first << " ";
   Inorder(node->right_);
 }
 
@@ -375,7 +422,7 @@ void Map<K, V>::Preorder(Node *node) const {
   if (node == nullptr) {
     return;
   }
-  std::cout << node->key_ << " ";
+  std::cout << node->node_pair_.first << " ";
   Inorder(node->left_);
   Inorder(node->right_);
 }
@@ -394,18 +441,29 @@ void Map<K, V>::Postorder(Node *node) const {
 
   Inorder(node->left_);
   Inorder(node->right_);
-  std::cout << node->key_ << " ";
+  std::cout << node->node_pair_.first << " ";
 }
 
 template<typename K, typename V>
-typename Map<K,V>::Iterator Map<K, V>::Begin() {
+typename Map<K, V>::Iterator Map<K, V>::Begin() {
   return Map::Iterator(root_);
 }
 
 template<typename K, typename V>
-typename Map<K,V>::Iterator Map<K, V>::End() {
+typename Map<K, V>::Iterator Map<K, V>::End() {
   return Map::Iterator(nullptr);
 }
+
+template<typename K, typename V>
+typename Map<K, V>::ConstIterator Map<K, V>::CBegin() const {
+  return Map::ConstIterator(root_);
+}
+
+template<typename K, typename V>
+typename Map<K, V>::ConstIterator Map<K, V>::CEnd() const {
+  return Map::ConstIterator(nullptr);
+}
+
 template<typename K, typename V>
 size_t Map<K, V>::Size() const {
   return length_;

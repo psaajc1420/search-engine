@@ -1,6 +1,7 @@
 #include "map.h"
 #include "parser.h"
 #include "porter2_stemmer.h"
+#include "unordered_map.h"
 
 #include <string>
 
@@ -17,10 +18,10 @@ int main(int argc, char *argv[]) {
   Porter2Stemmer::trim(word);
   auto it = parser.word_articles_map_.Find(word);
 
-  std::cout << "Number of articles found: " << (*it).size() << std::endl;
+  std::cout << "Number of articles found: " << (*it).second.size() << std::endl;
 
-  for (auto file_index : (*it)) {
-    std::cout << *parser.id_to_word_map_.Find(file_index) << std::endl;
+  for (auto file_index : (*it).second) {
+    std::cout << (*parser.id_to_word_map_.Find(file_index)).second << std::endl;
   }
 
   return 0;

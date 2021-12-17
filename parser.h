@@ -58,9 +58,9 @@ void Parser::Parse(std::string &text, int id) {
 
   std::unordered_set<std::string> seen_words;
 //  tokenizer_.Tokenize(text);
-//  text = tokenizer_.WordTokenize(text);
-  tokenizer_.RegexTokenize(text);
-  char* input = text.data();
+  text = tokenizer_.WordTokenize(text);
+//  tokenizer_.RegexTokenize(text);
+  char *input = text.data();
   char *token_c_str = strtok(input, delimiter_);
   while (token_c_str != nullptr) {
     std::string token = token_c_str;
@@ -70,12 +70,14 @@ void Parser::Parse(std::string &text, int id) {
 
       auto it = word_articles_map_.Find(token);
       if (it == word_articles_map_.End()) {
-        auto token_it = word_articles_map_.Insert(token);
-        (*token_it).emplace_back(id);
+        std::vector<int> ids = {id};
+        auto[token_it, flag] = word_articles_map_.Insert(
+            std::make_pair(token, ids));
+        (*token_it).second.emplace_back(id);
         num_words++;
       } else {
         if (seen_words.find(token) == seen_words.end()) {
-          (*it).emplace_back(id);
+          (*it).second.emplace_back(id);
         }
       }
       seen_words.insert(token);
@@ -95,7 +97,7 @@ void Parser::Traverse(const std::string &directory_path) {
 
     if (strcmp(dir_entry.path().extension().c_str(), ".json") == 0) {
       OpenStream(dir_entry.path(), counter);
-      *id_to_word_map_.Insert(counter) = dir_entry.path();
+      id_to_word_map_[counter] = dir_entry.path();
       counter++;
     }
   }
