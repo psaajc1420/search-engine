@@ -31,8 +31,9 @@ TEST_F(MapTest, CopyConstructor) {
   EXPECT_EQ(copy_map.Size(), 6);
 
   Map<int, int> copy_map_two(copy_map);
-  EXPECT_FALSE(copy_map.Empty());
-  EXPECT_EQ(copy_map.Size(), 6);
+  copy_map_two[45] = 4;
+  EXPECT_FALSE(copy_map_two.Empty());
+  EXPECT_EQ(copy_map_two.Size(), 7);
 }
 
 TEST_F(MapTest, AssignmentOperator) {

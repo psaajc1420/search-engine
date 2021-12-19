@@ -2,8 +2,8 @@
 // Created by Jacob Cadena on 11/20/21.
 //
 
-#ifndef SEARCH_ENGINE__MAP_H_
-#define SEARCH_ENGINE__MAP_H_
+#ifndef SEARCH_ENGINE_MAP_H_
+#define SEARCH_ENGINE_MAP_H_
 
 #include <iostream>
 #include <stack>

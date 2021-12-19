@@ -2,23 +2,24 @@
 // Created by Jacob Cadena on 11/20/21.
 //
 
-#ifndef SEARCH_ENGINE__PARSER_H_
-#define SEARCH_ENGINE__PARSER_H_
+#ifndef SEARCH_ENGINE_PARSER_H_
+#define SEARCH_ENGINE_PARSER_H_
 
 #include "map.h"
 #include "tokenizer.h"
+#include "unordered_map.h"
 
-#include <locale>
-#include <iostream>
+#include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <locale>
 #include <string>
-#include <vector>
-#include <cstring>
 #include <unordered_set>
+#include <vector>
 
 #include "porter2_stemmer/porter2_stemmer.h"
-
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/filereadstream.h"
@@ -28,6 +29,7 @@
 class Parser {
 
  public:
+  Parser() = default;
   inline void Traverse(const std::string &);
   inline void OpenStream(const std::string &, int);
   inline void Parse(std::string &, int);
@@ -37,7 +39,7 @@ class Parser {
   Map<int, std::string> id_to_word_map_;
  private:
   std::unordered_set<std::string> stop_words_;
-  constexpr static char delimiter_[] = " \t\r\n\v\f";
+  constexpr static char delimiter_[] = " ";
   Tokenizer tokenizer_;
 
   int num_words{0};
@@ -57,9 +59,8 @@ void Parser::OpenStream(const std::string &filename, int id) {
 void Parser::Parse(std::string &text, int id) {
 
   std::unordered_set<std::string> seen_words;
-//  tokenizer_.Tokenize(text);
   text = tokenizer_.WordTokenize(text);
-//  tokenizer_.RegexTokenize(text);
+
   char *input = text.data();
   char *token_c_str = strtok(input, delimiter_);
   while (token_c_str != nullptr) {
@@ -70,14 +71,11 @@ void Parser::Parse(std::string &text, int id) {
 
       auto it = word_articles_map_.Find(token);
       if (it == word_articles_map_.End()) {
-        std::vector<int> ids = {id};
-        auto[token_it, flag] = word_articles_map_.Insert(
-            std::make_pair(token, ids));
-        (*token_it).second.emplace_back(id);
+        word_articles_map_[token] = {id};
         num_words++;
       } else {
         if (seen_words.find(token) == seen_words.end()) {
-          (*it).second.emplace_back(id);
+          it->second.emplace_back(id);
         }
       }
       seen_words.insert(token);

@@ -2,7 +2,7 @@
 // Created by jacob on 12/9/21.
 //
 
-#ifndef SEARCH_ENGINE__UNORDERED_MAP_H_
+#ifndef SEARCH_ENGINE_UNORDERED_MAP_H_
 #define SEARCH_ENGINE_UNORDERED_MAP_H_
 
 #include <vector>
@@ -104,10 +104,16 @@ class UnorderedMap {
   using Iterator = MapIterator<ValueType>;
   using ConstIterator = MapIterator<const ValueType>;
 
-  UnorderedMap();
+  UnorderedMap() {
+    num_buckets_ = kInitialBucketSize_;
+    size_ = 0;
+    CreateBuckets(kInitialBucketSize_);
+  }
   explicit UnorderedMap(size_t num_buckets)
       : num_buckets_{num_buckets},
-        size_{0} {}
+        size_{0} {
+    CreateBuckets(num_buckets);
+  }
 
   UnorderedMap(const UnorderedMap &);
   ~UnorderedMap();
@@ -144,10 +150,6 @@ class UnorderedMap {
 
 };
 
-template<typename K, typename V>
-UnorderedMap<K, V>::UnorderedMap() {
-  CreateBuckets(kInitialBucketSize_);
-}
 
 template<typename K, typename V>
 UnorderedMap<K, V>::UnorderedMap(const UnorderedMap<K, V> &unordered_map) {
@@ -178,7 +180,7 @@ void UnorderedMap<K, V>::Copy(const UnorderedMap<K, V> &unordered_map) {
   for (int i = 0; i < unordered_map.num_buckets_; i++) {
     for (Node *curr = unordered_map.table_.at(i); curr != nullptr;
          curr = curr->next_) {
-      (*this).Insert(curr->node_pair_);
+      Insert(curr->node_pair_);
     }
   }
 }
@@ -294,7 +296,7 @@ void UnorderedMap<K, V>::Rehash() {
   CreateBuckets(old_table.size() * 2 + 1);
   for (size_t i = 0; i < old_table.size(); i++) {
     for (Node *curr = old_table[i]; curr != nullptr; curr = curr->next_) {
-      (*this).Insert(curr->node_pair_);
+      Insert(curr->node_pair_);
     }
   }
   DeleteBuckets(old_table);

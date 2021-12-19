@@ -23,7 +23,8 @@ std::string Tokenizer::WordTokenize(std::string &text) {
   return std::move(new_text);
 }
 
-void Tokenizer::Tokenize(std::string &text) {
+std::string Tokenizer::Tokenize(std::string &text) {
+
   StartQuotes(text);
   Punctuation(text);
 
@@ -38,6 +39,8 @@ void Tokenizer::Tokenize(std::string &text) {
 
   text = std::move(" " + text + " ");
   EndQuotes(text);
+
+  return text;
 }
 
 void Tokenizer::StartQuotes(std::string &text) {
@@ -125,10 +128,11 @@ void Tokenizer::Punctuation(std::string &text) {
                                       R"prefix( $& )prefix"));
 }
 
-void Tokenizer::RegexTokenize(std::string &text) {
+std::string Tokenizer::RegexTokenize(std::string &text) {
 
-  text = std::move(std::regex_replace(text,
-                                      std::regex(R"prefix(([^a-zA-Z]+))prefix"),
-                                      R"prefix( $1 )prefix"));
+  return std::move(
+      std::regex_replace(text,
+                         std::regex(R"prefix(([^a-zA-Z]+))prefix"),
+                         R"prefix( $1 )prefix"));
 
 }

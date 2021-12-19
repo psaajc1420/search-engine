@@ -7,15 +7,18 @@ include_directories(lib)
 include_directories(lib/porter2_stemmer)
 
 set(test_files map_test.cc unordered_map_test.cc)
-
-add_executable(search_engine
-  main.cpp map.h
-  parser.cc parser.h
-  tokenizer.cc tokenizer.h
+set(source_files
+  map.h
+  unordered_map.h
+  parser.cc
+  parser.h
+  tokenizer.cc
+  tokenizer.h
   lib/porter2_stemmer/porter2_stemmer.cpp
   lib/porter2_stemmer/porter2_stemmer.h
-  unordered_map.h
 )
+
+add_executable(search_engine main.cc ${source_files})
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -55,8 +58,5 @@ add_executable(
   ${test_files}
   ${source_files}
 )
-target_link_libraries(tests gtest_main ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
-
-
-add_executable(test_stemmer test_stemmer.cc)
+target_link_libraries(tests gtest_main)
 
