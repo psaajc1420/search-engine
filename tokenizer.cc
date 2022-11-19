@@ -4,26 +4,21 @@
 
 #include "tokenizer.h"
 
-std::string Tokenizer::WordTokenize(std::string &text) {
-  std::string new_text;
-  for (int i = 0; i < text.length(); i++) {
-    if (std::isalpha(text[i])) {
-      new_text += static_cast<char>(std::tolower(text[i]));
-    } else {
-      if (text[i] == ' ' || text[i] == '\'') {
-        new_text += text[i];
-      } else {
-        new_text += " ";
-        new_text += text[i];
-        new_text += " ";
-      }
+void Tokenizer::WordTokenize(std::string &text) {
+  std::vector<std::string> tokens;
+  StartQuotes(text);
+  EndQuotes(text);
+  text = std::move(std::regex_replace(text,
+                                      std::regex(R"prefix([^A-Za-z']+)prefix"),
+                                      R"prefix( "" )prefix"));
+  for (char & i : text) {
+    if (std::isalpha(i)) {
+      i = static_cast<char>(std::tolower(i));
     }
   }
-
-  return std::move(new_text);
 }
 
-std::string Tokenizer::Tokenize(std::string &text) {
+std::string Tokenizer::RegexTokenize(std::string &text) {
 
   StartQuotes(text);
   Punctuation(text);
@@ -57,10 +52,7 @@ void Tokenizer::StartQuotes(std::string &text) {
                                       std::regex(
                                           R"prefix(([ \(\[{<])(\"|\'{2}))prefix"),
                                       R"prefix($1 `` )prefix"));
-//  text = std::move(std::regex_replace(text,
-//                                      std::regex(
-//                                          R"prefix((?i)(\')(?!re|ve|ll|m|t|s|d|n)(\w)\b)prefix"),
-//                                      R"prefix($1 $2)prefix"));
+
 }
 
 void Tokenizer::EndQuotes(std::string &text) {
@@ -126,13 +118,4 @@ void Tokenizer::Punctuation(std::string &text) {
   text = std::move(std::regex_replace(text,
                                       std::regex(R"([*])"),
                                       R"prefix( $& )prefix"));
-}
-
-std::string Tokenizer::RegexTokenize(std::string &text) {
-
-  return std::move(
-      std::regex_replace(text,
-                         std::regex(R"prefix(([^a-zA-Z]+))prefix"),
-                         R"prefix( $1 )prefix"));
-
 }

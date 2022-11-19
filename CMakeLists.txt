@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(lib)
 include_directories(lib/porter2_stemmer)
+include_directories(lib/podofo/include)
 
 set(test_files map_test.cc unordered_map_test.cc)
 set(source_files
@@ -14,11 +15,11 @@ set(source_files
   parser.h
   tokenizer.cc
   tokenizer.h
-  lib/porter2_stemmer/porter2_stemmer.cpp
-  lib/porter2_stemmer/porter2_stemmer.h
 )
 
+find_library(PORTER_STEMMER_LIB porter2-stemmer lib/porter2_stemmer)
 add_executable(search_engine main.cc ${source_files})
+target_link_libraries(search_engine ${PORTER_STEMMER_LIB})
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)

@@ -9,14 +9,14 @@
 #include <locale>
 #include <regex>
 #include <vector>
+#include <sstream>
 
 class Tokenizer {
   using convert_t = std::codecvt_utf8<wchar_t>;
 
  public:
   std::string RegexTokenize(std::string &);
-  std::string WordTokenize(std::string &);
-  std::string Tokenize(std::string &);
+  void WordTokenize(std::string &);
   void StartQuotes(std::string &);
   void EndQuotes(std::string &);
   void Punctuation(std::string &);

@@ -105,9 +105,9 @@ class Map {
   Iterator Find(const K &);
   ConstIterator Find(const K &key) const;
 
-  inline bool Empty() const;
+  [[nodiscard]] inline bool Empty() const;
   inline void Clear();
-  inline size_t Size() const;
+  [[nodiscard]] inline size_t Size() const;
 
   inline void Inorder() const;
   inline void Preorder() const;
@@ -135,7 +135,7 @@ class Map {
 
   // A utility function to get maximum
   // of two integers
-  inline int Max(int a, int b) const;
+  [[nodiscard]] inline int Max(int a, int b) const;
 
   // A utility function to get the
   // height of the tree
