@@ -11,7 +11,7 @@ void Parser::OpenStream(const std::string &filename, int id) {
   rapidjson::IStreamWrapper isw(ifw);
 
   document.ParseStream(isw);
-  std::string &&text = document["text"].GetString();
+  std::string&& text = document["text"].GetString();
   Parse(text, id);
   ifw.close();
 }

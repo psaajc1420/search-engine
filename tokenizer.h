@@ -16,6 +16,7 @@ class Tokenizer {
 
  public:
   std::string RegexTokenize(std::string &);
+  void Split(const char *, const std::regex &, std::vector<std::string> &);
   void WordTokenize(std::string &);
   void StartQuotes(std::string &);
   void EndQuotes(std::string &);
