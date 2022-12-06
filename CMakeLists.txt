@@ -9,17 +9,15 @@ include_directories(lib/podofo/include)
 
 set(test_files map_test.cc unordered_map_test.cc)
 set(source_files
-  map.h
-  unordered_map.h
   parser.cc
   parser.h
   tokenizer.cc
-  tokenizer.h
 )
 
-add_library(PORTER_STEMMER_LIB lib/porter2_stemmer/porter2_stemmer.cpp)
+add_library(PORTER_STEMMER_LIB STATIC lib/porter2_stemmer/porter2_stemmer.cpp)
+target_include_directories(PORTER_STEMMER_LIB PUBLIC ${PROJECT_SOURCE_DIR}/lib/porter2_stemmer)
 add_executable(search_engine main.cc ${source_files})
-target_link_libraries(search_engine PUBLIC ${PORTER_STEMMER_LIB})
+target_link_libraries(search_engine PRIVATE PORTER_STEMMER_LIB)
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
