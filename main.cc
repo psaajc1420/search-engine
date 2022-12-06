@@ -22,10 +22,10 @@ int main(int argc, char *argv[]) {
 //    std::cout << parser.id_to_filename_map_.Find(file_index)->second << std::endl;
 //  }
 
-  for (auto words_it = parser.word_articles_map_.Begin();
-       words_it != parser.word_articles_map_.End(); ++words_it) {
-    cout << words_it->first << endl;
-  }
+//  for (auto words_it = parser.word_articles_map_.Begin();
+//       words_it != parser.word_articles_map_.End(); ++words_it) {
+//    cout << words_it->first << endl;
+//  }
 
   std::cout << parser.word_articles_map_.Size() << std::endl;
 

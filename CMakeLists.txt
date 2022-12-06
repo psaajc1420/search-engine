@@ -17,9 +17,9 @@ set(source_files
   tokenizer.h
 )
 
-find_library(PORTER_STEMMER_LIB porter2-stemmer lib/porter2_stemmer)
+add_library(PORTER_STEMMER_LIB lib/porter2_stemmer/porter2_stemmer.cpp)
 add_executable(search_engine main.cc ${source_files})
-target_link_libraries(search_engine ${PORTER_STEMMER_LIB})
+target_link_libraries(search_engine PUBLIC ${PORTER_STEMMER_LIB})
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)

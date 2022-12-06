@@ -12,18 +12,12 @@
 #include <sstream>
 
 class Tokenizer {
-  using convert_t = std::codecvt_utf8<wchar_t>;
-
  public:
   std::string RegexTokenize(std::string &);
-  void Split(const char *, const std::regex &, std::vector<std::string> &);
-  void WordTokenize(std::string &);
+  std::string WordTokenize(std::string &);
   void StartQuotes(std::string &);
   void EndQuotes(std::string &);
   void Punctuation(std::string &);
-
- private:
-  std::wstring_convert<convert_t, wchar_t> str_converter_;
 };
 
 #endif //SEARCH_ENGINE__TOKENIZER_H_

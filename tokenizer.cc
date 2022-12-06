@@ -4,30 +4,18 @@
 
 #include "tokenizer.h"
 
-void Tokenizer::Split(const char *s, const std::regex &r, std::vector<std::string> &v)
-{
-  auto rit = std::cregex_token_iterator(s, s + std::strlen(s), r, -1);
-  auto rend = std::cregex_token_iterator();
-  v.clear();
-  while(rit != rend)
-  {
-    v.push_back(*rit);
-    ++rit;
-  }
-}
-
-void Tokenizer::WordTokenize(std::string &text) {
-  std::vector<std::string> tokens;
-  StartQuotes(text);
-  EndQuotes(text);
-  text = std::move(std::regex_replace(text,
-                                      std::regex(R"prefix([^A-Za-z']+)prefix"),
-                                      R"prefix( "" )prefix"));
-  for (char & i : text) {
-    if (std::isalpha(i)) {
-      i = static_cast<char>(std::tolower(i));
+std::string Tokenizer::WordTokenize(std::string &text) {
+  std::string new_text = "";
+  for (auto c : text) {
+    if (std::isalpha(c)) {
+      new_text += static_cast<char>(tolower(c));
+    } else if (c == ' ' || c == '\'') {
+      new_text += c;
+    } else {
+      new_text += ' ';
     }
   }
+  return std::move(new_text);
 }
 
 std::string Tokenizer::RegexTokenize(std::string &text) {

@@ -19,11 +19,12 @@ void Parser::OpenStream(const std::string &filename, int id) {
 void Parser::Parse(std::string &text, int id) {
   std::unordered_set<std::string> seen_words(1000);
 
-  tokenizer_.WordTokenize(text);
-  std::stringstream ss(text);
+  std::string new_text = tokenizer_.WordTokenize(text);
+  std::stringstream ss(new_text);
 
   std::string token;
   while (ss >> token) {
+    Porter2Stemmer::stem(token);
     if (stop_words_.find(token) == stop_words_.end()) {
       if (seen_words.find(token) == seen_words.end())
         word_articles_map_[token].emplace_back(id);
