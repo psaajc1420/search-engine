@@ -4,11 +4,11 @@
 
 #include "index_handler.h"
 
-void IndexHandler::AddDocument(int id, std::string &filename) {
-  id_to_filename_map_[id] = filename;
+void IndexHandler::AddDocument(int id, Document &document) {
+  id_to_filename_map_[id] = document;
 }
 
-std::string IndexHandler::GetDocument(int id) {
+Document IndexHandler::GetDocument(int id) {
   return id_to_filename_map_[id];
 }
 
@@ -61,11 +61,21 @@ void IndexHandler::ReadDocuments() {
   document.ParseStream(isw);
 
   for (auto &doc_info_itr: document["docs"].GetArray()) {
-    for (auto & doc_info: doc_info_itr.GetObject()) {
-      std::string doc_id_str = doc_info.name.GetString();
-      std::string path = doc_info.value.GetString();
+    for (auto &doc_info_pair: doc_info_itr.GetObject()) {
+      std::string doc_id_str = doc_info_pair.name.GetString();
       int id = stoi(doc_id_str);
-      id_to_filename_map_[id] = path;
+      Document doc;
+      auto doc_info = doc_info_pair.value.GetObject();
+      std::string &&text = doc_info["text"].GetString();
+      std::string &&title = doc_info["title"].GetString();
+      std::string &&publisher = doc_info["publisher"].GetString();
+      std::string &&date_published = doc_info["date-published"].GetString();
+      std::string &&file_location = doc_info["file-location"].GetString();
+      std::string &&url = doc_info["url"].GetString();
+      std::string &&num_words_str = doc_info["num-words"].GetString();
+      int num_words = stoi(num_words_str);
+      id_to_filename_map_[id] = Document(id, title, text, publisher,
+                                         date_published, file_location, url, num_words);
     }
   }
 
@@ -91,7 +101,24 @@ void IndexHandler::WriteDocuments() {
   for (auto it = id_to_filename_map_.Begin(); it != id_to_filename_map_.End(); ++it) {
     writer.StartObject();
     writer.Key(std::to_string(it->first).c_str());
-    writer.String(it->second.c_str());
+    writer.StartObject();
+    writer.Key("id");
+    writer.String(std::to_string(it->second.GetId()).c_str());
+    writer.Key("title");
+    writer.String(it->second.GetTitle().c_str());
+    writer.Key("text");
+    writer.String(it->second.GetText().c_str());
+    writer.Key("publisher");
+    writer.String(it->second.GetPublisher().c_str());
+    writer.Key("date-published");
+    writer.String(it->second.GetDatePublished().c_str());
+    writer.Key("file-location");
+    writer.String(it->second.GetFileLocation().c_str());
+    writer.Key("url");
+    writer.String(it->second.GetUrl().c_str());
+    writer.Key("num-words");
+    writer.String(std::to_string(it->second.GetNumWords()).c_str());
+    writer.EndObject();
     writer.EndObject();
   }
   writer.EndArray();

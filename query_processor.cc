@@ -66,7 +66,8 @@ void QueryProcessor::DisplayResults() {
   } else {
     cout << "Search Results: " << endl;
     for (int i = 0; i < 15 && i < results_.size(); i++) {
-      cout << "\t" << i + 1 << ". " << results_.at(i) << endl;
+      cout << i + 1 << ". " << endl;
+      cout << results_.at(i) << endl;
     }
     cout << endl;
   }
@@ -80,7 +81,7 @@ void QueryProcessor::AndQuery(std::string& word, const std::string &index_key) {
   if (word_it == index->GetMap().CEnd()) {
     std::cout << "No documents found for " << word << std::endl;
   } else {
-    std::vector<std::string> docs;
+    std::vector<Document> docs;
     for (auto it = word_it->second.CBegin(); it != word_it->second.CEnd(); ++it) {
       docs.push_back(index_handler_->GetDocument(it->first));
     }
@@ -103,7 +104,7 @@ void QueryProcessor::NotQuery(std::string& word) {
   if (word_it == index->GetMap().CEnd()) {
     std::cout << "No documents found for " << word << std::endl;
   } else {
-    std::vector<std::string> docs;
+    std::vector<Document> docs;
     for (auto it = word_it->second.CBegin(); it != word_it->second.CEnd(); ++it) {
       docs.push_back(index_handler_->GetDocument(it->first));
     }

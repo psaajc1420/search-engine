@@ -5,6 +5,7 @@
 #ifndef SEARCH_ENGINE_QUERY_PROCESSOR_H_
 #define SEARCH_ENGINE_QUERY_PROCESSOR_H_
 
+#include "document.h"
 #include "index_handler.h"
 #include "parser.h"
 
@@ -36,7 +37,7 @@ class QueryProcessor {
 
   std::string stop_words_filename_;
   std::queue<std::string> parsed_query_;
-  std::vector<std::string> results_;
+  std::vector<Document> results_;
   IndexHandler *index_handler_;
 };
 

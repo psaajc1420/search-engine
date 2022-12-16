@@ -39,7 +39,7 @@ class Parser {
 
  private:
   void OpenStream(std::string &, int);
-  void Parse(std::string &, int);
+  size_t Parse(std::string &, int);
 
   Tokenizer tokenizer_;
   IndexHandler *index_handler_;

@@ -7,12 +7,11 @@ include_directories(lib)
 include_directories(lib/porter2_stemmer)
 include_directories(lib/podofo/include)
 
-set(test_files map_test.cc unordered_map_test.cc interface.cc interface.h index.cc index.h index_handler.cc index_handler.h timer.cc timer.h query_processor.cc query_processor.h document.cc document.h)
-set(source_files
-  parser.cc
-  parser.h
-  tokenizer.cc
-        interface.cc interface.h index.cc index.h index_handler.cc index_handler.h timer.cc timer.h query_processor.cc query_processor.h)
+set(test_files map_test.cc unordered_map_test.cc)
+set(source_files parser.cc
+parser.h tokenizer.cc interface.cc index.cc
+index_handler.cc timer.cc query_processor.cc document.cc
+)
 
 add_library(PORTER_STEMMER_LIB STATIC lib/porter2_stemmer/porter2_stemmer.cpp)
 target_include_directories(PORTER_STEMMER_LIB PUBLIC ${PROJECT_SOURCE_DIR}/lib/porter2_stemmer)
@@ -52,10 +51,6 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(
-  tests
-  ${test_files}
-  ${source_files}
-)
+add_executable(tests ${test_files})
 target_link_libraries(tests gtest_main)
 
