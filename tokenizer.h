@@ -14,7 +14,8 @@
 class Tokenizer {
  public:
   std::string RegexTokenize(std::string &);
-  std::string WordTokenize(std::string &);
+  static void WordTokenize(std::string &);
+ private:
   void StartQuotes(std::string &);
   void EndQuotes(std::string &);
   void Punctuation(std::string &);

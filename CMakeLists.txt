@@ -7,12 +7,12 @@ include_directories(lib)
 include_directories(lib/porter2_stemmer)
 include_directories(lib/podofo/include)
 
-set(test_files map_test.cc unordered_map_test.cc)
+set(test_files map_test.cc unordered_map_test.cc interface.cc interface.h index.cc index.h index_handler.cc index_handler.h timer.cc timer.h query_processor.cc query_processor.h document.cc document.h)
 set(source_files
   parser.cc
   parser.h
   tokenizer.cc
-)
+        interface.cc interface.h index.cc index.h index_handler.cc index_handler.h timer.cc timer.h query_processor.cc query_processor.h)
 
 add_library(PORTER_STEMMER_LIB STATIC lib/porter2_stemmer/porter2_stemmer.cpp)
 target_include_directories(PORTER_STEMMER_LIB PUBLIC ${PROJECT_SOURCE_DIR}/lib/porter2_stemmer)

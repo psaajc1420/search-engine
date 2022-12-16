@@ -5,6 +5,7 @@
 #ifndef SEARCH_ENGINE_PARSER_H_
 #define SEARCH_ENGINE_PARSER_H_
 
+#include "index_handler.h"
 #include "map.h"
 #include "tokenizer.h"
 #include "unordered_map.h"
@@ -17,37 +18,33 @@
 #include <locale>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "porter2_stemmer/porter2_stemmer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
-#include "rapidjson/filereadstream.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 class Parser {
 
  public:
-  Parser() {
-    id_to_filename_map_ = UnorderedMap<int, std::string>(500000);
+  Parser() : index_handler_{nullptr}, counter_{0} {}
+  explicit Parser(IndexHandler *index_handler,
+                  const std::string& stop_words_filename = "stop_words.txt")
+      : index_handler_{index_handler}, counter_{0} {
+    stop_words_ = ReadStopWords(stop_words_filename);
   }
   void Traverse(const std::string &);
-  void OpenStream(const std::string &, int);
-  void Parse(std::string &, int);
-  void ReadStopWords(const std::string &);
+  static std::unordered_set<std::string> ReadStopWords(const std::string &);
 
-  Map<std::string, std::vector<int>> word_articles_map_;
-  UnorderedMap<int, std::string> id_to_filename_map_;
  private:
-  std::unordered_set<std::string> stop_words_;
-  constexpr static char delimiter_[] = " ";
+  void OpenStream(std::string &, int);
+  void Parse(std::string &, int);
+
   Tokenizer tokenizer_;
-
-  int num_words{0};
-
+  IndexHandler *index_handler_;
+  std::unordered_set<std::string> stop_words_;
+  int counter_;
 };
 
-
-
-#endif //SEARCH_ENGINE__PARSER_H_
+#endif //SEARCH_ENGINE_PARSER_H_

@@ -4,18 +4,18 @@
 
 #include "tokenizer.h"
 
-std::string Tokenizer::WordTokenize(std::string &text) {
-  std::string new_text = "";
-  for (auto c : text) {
-    if (std::isalpha(c)) {
-      new_text += static_cast<char>(tolower(c));
-    } else if (c == ' ' || c == '\'') {
-      new_text += c;
+void Tokenizer::WordTokenize(std::string &text) {
+  text = std::regex_replace(text, std::regex(R"prefix([^\w\s]+)prefix"), R"prefix( "" )prefix");
+  for (char& c : text) {
+    if (isalnum(c)) {
+      if (isalpha(c)) {
+        c = static_cast<char>(tolower(c));
+      }
     } else {
-      new_text += ' ';
+      c = ' ';
     }
+
   }
-  return std::move(new_text);
 }
 
 std::string Tokenizer::RegexTokenize(std::string &text) {
@@ -28,9 +28,7 @@ std::string Tokenizer::RegexTokenize(std::string &text) {
                                           R"prefix([\]\[(\)\{\}\<\>])prefix"),
                                       R"prefix( $& )prefix"));
 
-  text = std::move(std::regex_replace(text,
-                                      std::regex(R"prefix(--)prefix"),
-                                      R"prefix( -- )prefix"));
+  text = std::move(std::regex_replace(text,std::regex(R"prefix(--)prefix"),R"prefix( -- )prefix"));
 
   text = std::move(" " + text + " ");
   EndQuotes(text);

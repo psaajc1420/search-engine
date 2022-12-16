@@ -91,9 +91,74 @@ class Map {
     Node *curr_;
     std::stack<Node *> min_;
   };
+
+  template<typename ValueType=value_type>
+  class ConstMapIterator {
+    using SelfType = ConstMapIterator;
+   public:
+
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = ValueType;
+    using pointer = ValueType *;
+    using reference = ValueType &;
+
+    explicit ConstMapIterator(const Node *curr) : curr_{nullptr} {
+      Fill(curr);
+      if (!min_.empty()) {
+        curr_ = min_.top();
+        min_.pop();
+      }
+    }
+
+    ConstMapIterator(const ConstMapIterator &) = default;
+    ConstMapIterator &operator=(const ConstMapIterator &) = default;
+    ~ConstMapIterator() = default;
+
+    reference operator*() {
+      return curr_->node_pair_;
+    }
+
+    pointer operator->() {
+      return &curr_->node_pair_;
+    }
+
+    SelfType operator++() {
+      if (min_.empty()) {
+        curr_ = nullptr;
+      } else {
+        curr_ = min_.top();
+        min_.pop();
+        if (curr_->right_ != nullptr) {
+          Fill(curr_->right_);
+        }
+      }
+      return *this;
+    }
+
+    friend bool operator==(const SelfType &lhs, const SelfType &rhs) {
+      return lhs.curr_ == rhs.curr_;
+    }
+
+    friend bool operator!=(const SelfType &lhs, const SelfType &rhs) {
+      return lhs.curr_ != rhs.curr_;
+    }
+
+   private:
+    void Fill(const Node *curr) {
+      while (curr != nullptr) {
+        min_.push(curr);
+        curr = curr->left_;
+      }
+    }
+
+    const Node *curr_;
+    std::stack<const Node *> min_;
+  };
+
  public:
   using Iterator = MapIterator<value_type>;
-  using ConstIterator = MapIterator<const value_type>;
+  using ConstIterator = ConstMapIterator<const value_type>;
 
   Map();
   Map(const Map &);
@@ -103,7 +168,7 @@ class Map {
   std::pair<Iterator, bool> Insert(const std::pair<const K, V> &);
   V &operator[](const K &key);
   Iterator Find(const K &);
-  ConstIterator Find(const K &key) const;
+  ConstIterator Find(const K &) const;
 
   [[nodiscard]] inline bool Empty() const;
   inline void Clear();
@@ -132,6 +197,7 @@ class Map {
   inline void Copy(Node *, Node *&);
   inline void Clear(Node *&);
   inline Node *Find(Node *&, const K &);
+  inline const Node *Find(const Node *&, const K &) const;
 
   // A utility function to get maximum
   // of two integers
@@ -159,10 +225,7 @@ class Map {
 };
 
 template<typename K, typename V>
-Map<K, V>::Map() {
-  root_ = nullptr;
-  length_ = 0;
-}
+Map<K, V>::Map() : root_{nullptr}, length_{0} {}
 
 template<typename K, typename V>
 Map<K, V>::Map(const Map &map) {
@@ -202,16 +265,18 @@ typename Map<K, V>::Iterator Map<K, V>::Find(const K &key) {
 
 template<typename K, typename V>
 typename Map<K, V>::ConstIterator Map<K, V>::Find(const K &key) const {
-  Node *node = Find(root_, key);
-  if (node == nullptr) {
+  const Node* const_root = root_;
+  const_root = Find(const_root, key);
+  if (const_root == nullptr) {
     return ConstIterator(nullptr);
   }
 
-  return ConstIterator(node);
+  return ConstIterator(const_root);
 }
 
+
 template<typename K, typename V>
-typename Map<K, V>::Node *Map<K, V>::Find(Node *&node, const K &key) {
+typename Map<K, V>::Node *Map<K, V>::Find(Node *&node, const K &key){
   if (node == nullptr || node->node_pair_.first == key) {
     return node;
   }
@@ -220,6 +285,19 @@ typename Map<K, V>::Node *Map<K, V>::Find(Node *&node, const K &key) {
   }
 
   return Find(node->right_, key);
+}
+
+template<typename K, typename V>
+const typename Map<K, V>::Node *Map<K, V>::Find(const Node *&node, const K &key) const{
+  if (node == nullptr || node->node_pair_.first == key) {
+    return node;
+  }
+  if (key < node->node_pair_.first) {
+    const Node* const_left = node->left_;
+    return Find(const_left, key);
+  }
+  const Node* const_right = node->right_;
+  return Find(const_right, key);
 }
 
 template<typename K, typename V>

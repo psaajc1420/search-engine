@@ -36,7 +36,7 @@ class UnorderedMap {
     using pointer = ValueType *;
     using reference = ValueType &;
 
-    MapIterator() = default;
+    MapIterator() : map_{nullptr}, node_{nullptr}, bucket_{0} {}
     MapIterator(const UnorderedMap<K, V> *map, Node *node, size_t bucket)
         : map_{map}, node_{node}, bucket_{bucket} {}
 
@@ -96,13 +96,84 @@ class UnorderedMap {
     size_t bucket_;
   };
 
+  template<typename ValueType=std::pair<const K, V>>
+  class ConstMapIterator {
+    using SelfType = ConstMapIterator;
+   public:
+    friend class UnorderedMap<K, V>;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = ValueType;
+    using pointer = ValueType *;
+    using reference = ValueType &;
+
+    ConstMapIterator() : map_{nullptr}, node_{nullptr}, bucket_{0} {}
+    ConstMapIterator(const UnorderedMap<K, V> *map, const Node *node, size_t bucket)
+        : map_{map}, node_{node}, bucket_{bucket} {}
+    ConstMapIterator(const UnorderedMap<K, V> *map, Node *node, size_t bucket)
+        : map_{map}, node_{node}, bucket_{bucket} {}
+    ConstMapIterator(const UnorderedMap<K, V> *map, bool end)
+        : map_{map} {
+      if (end) {
+        bucket_ = map->num_buckets_;
+        node_ = nullptr;
+      } else {
+        bucket_ = 0;
+        node_ = map_->table_[bucket_];
+        while (node_ == nullptr && ++bucket_ < map_->num_buckets_) {
+          node_ = map_->table_[bucket_];
+        }
+      }
+    }
+
+    ConstMapIterator(const ConstMapIterator &it) = default;
+    ConstMapIterator &operator=(const ConstMapIterator &) = default;
+    ~ConstMapIterator() = default;
+
+    reference operator*() {
+      return node_->node_pair_;
+    }
+
+    pointer operator->() {
+      return &node_->node_pair_;
+    }
+
+    SelfType operator++() {
+      node_ = node_->next_;
+      while (node_ == nullptr && ++bucket_ < map_->num_buckets_) {
+        node_ = map_->table_[bucket_];
+      }
+      return *this;
+    }
+
+    SelfType operator++(int) {
+      ConstMapIterator copy(*this);
+      operator++();
+      return copy;
+    }
+
+    friend bool operator==(const ConstMapIterator &lhs,
+                           const ConstMapIterator &rhs) {
+      return lhs.node_ == rhs.node_;
+    }
+
+    friend bool operator!=(const ConstMapIterator &lhs,
+                           const ConstMapIterator &rhs) {
+      return lhs.node_ != rhs.node_;
+    }
+
+   private:
+    const UnorderedMap *map_;
+    Node *node_;
+    size_t bucket_;
+  };
+
  public:
   using ValueType = std::pair<const K, V>;
   using ValuePointer = ValueType *;
   using ValueReference = ValueType &;
-
   using Iterator = MapIterator<ValueType>;
-  using ConstIterator = MapIterator<const ValueType>;
+  using ConstIterator = ConstMapIterator<const ValueType>;
 
   UnorderedMap() {
     num_buckets_ = kInitialBucketSize_;
@@ -120,10 +191,11 @@ class UnorderedMap {
   UnorderedMap &operator=(const UnorderedMap &);
 
   Iterator Find(const K &);
+  ConstIterator Find(const K &) const;
   std::pair<Iterator, bool> Insert(const std::pair<const K, V> &);
   [[nodiscard]] bool Empty() const;
+  [[nodiscard]] size_t Size() const;
   void Clear();
-  size_t Size() const;
 
   V &operator[](const K &);
 
@@ -140,19 +212,18 @@ class UnorderedMap {
   size_t GetIndex(const K &) const;
 
   Node *FindNode(size_t bucket, const K &key) const;
-  Node *FindNode(size_t bucket, const K &key, Node *&parent) const;
+  const Node *FindNode(size_t bucket, const K &key, const Node *&parent) const;
 
   static const int kInitialBucketSize_ = 101;
   static const int kMaxLoadPercentage = 70;
   std::vector<Node *> table_;
   size_t num_buckets_;
   size_t size_;
-
 };
 
-
 template<typename K, typename V>
-UnorderedMap<K, V>::UnorderedMap(const UnorderedMap<K, V> &unordered_map) {
+UnorderedMap<K, V>::UnorderedMap(const UnorderedMap<K, V> &unordered_map)
+    : num_buckets_{0}, size_{0} {
   Copy(unordered_map);
 }
 
@@ -244,6 +315,13 @@ typename UnorderedMap<K, V>::Iterator UnorderedMap<K, V>::Find(const K &key) {
 }
 
 template<typename K, typename V>
+typename UnorderedMap<K, V>::ConstIterator UnorderedMap<K, V>::Find(const K &key) const {
+  size_t loc = GetIndex(key);
+  const Node *cp = FindNode(loc, key);
+  return ConstIterator(this, cp, loc);
+}
+
+template<typename K, typename V>
 size_t UnorderedMap<K, V>::GetIndex(const K &key) const {
   auto hash_value = std::hash<K>{}(key);
   return hash_value % num_buckets_;
@@ -311,21 +389,22 @@ typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
 }
 
 template<typename K, typename V>
-typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
+const typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
     size_t bucket,
     const K &key,
-    Node *&parent) const {
+    const Node *&parent) const {
   parent = nullptr;
-  Node *curr = table_.at(bucket);
+  const Node *curr = table_.at(bucket);
   while (curr != nullptr && key != curr->node_pair_.first) {
     parent = curr;
     curr = curr->next_;
   }
   return curr;
 }
+
 template<typename K, typename V>
 size_t UnorderedMap<K, V>::Size() const {
   return size_;
 }
 
-#endif //SEARCH_ENGINE__UNORDERED_MAP_H_
+#endif //SEARCH_ENGINE_UNORDERED_MAP_H_
