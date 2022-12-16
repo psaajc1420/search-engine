@@ -9,7 +9,7 @@ include_directories(lib/podofo/include)
 
 set(test_files map_test.cc unordered_map_test.cc)
 set(source_files parser.cc
-parser.h tokenizer.cc interface.cc index.cc
+tokenizer.cc interface.cc index.cc
 index_handler.cc timer.cc query_processor.cc document.cc
 )
 
