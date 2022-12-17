@@ -13,12 +13,12 @@
 
 class Tokenizer {
  public:
-  std::string RegexTokenize(std::string &);
+  static void RegexTokenize(std::string &);
   static void WordTokenize(std::string &);
  private:
-  void StartQuotes(std::string &);
-  void EndQuotes(std::string &);
-  void Punctuation(std::string &);
+  static void StartQuotes(std::string &);
+  static void EndQuotes(std::string &);
+  static void Punctuation(std::string &);
 };
 
-#endif //SEARCH_ENGINE__TOKENIZER_H_
+#endif //SEARCH_ENGINE_TOKENIZER_H_

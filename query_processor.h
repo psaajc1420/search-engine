@@ -8,6 +8,7 @@
 #include "document.h"
 #include "index_handler.h"
 #include "parser.h"
+#include "ranking_processor.h"
 
 #include <iostream>
 #include <queue>
@@ -35,10 +36,11 @@ class QueryProcessor {
   void NotQuery(std::string&);
   static std::string Enter();
 
+  IndexHandler *index_handler_;
   std::string stop_words_filename_;
   std::queue<std::string> parsed_query_;
   std::vector<Document> results_;
-  IndexHandler *index_handler_;
+  RankingProcessor ranking_processor_;
 };
 
 #endif //SEARCH_ENGINE_QUERY_PROCESSOR_H_

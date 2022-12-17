@@ -40,13 +40,28 @@ class Map {
     using pointer = ValueType *;
     using reference = ValueType &;
 
-    explicit MapIterator(Node *curr) : curr_{nullptr} {
+    MapIterator() = default;
+    explicit MapIterator(Node *curr) {
       Fill(curr);
       if (!min_.empty()) {
         curr_ = min_.top();
         min_.pop();
+      } else {
+        curr_ = nullptr;
       }
     }
+
+    MapIterator(Node* root, Node *curr) {
+      Fill(root);
+      while (!min_.empty() && curr != curr_) {
+        curr_ = min_.top();
+        min_.pop();
+        if (curr_->right_ != nullptr) {
+          Fill(curr_->right_);
+        }
+      }
+    }
+
     MapIterator(const MapIterator &) = default;
     MapIterator &operator=(const MapIterator &) = default;
     ~MapIterator() = default;
@@ -103,18 +118,30 @@ class Map {
     using pointer = ValueType *;
     using reference = ValueType &;
 
-    explicit ConstMapIterator(const Node *curr) : curr_{nullptr} {
+    ConstMapIterator() = default;
+    explicit ConstMapIterator(const Node *curr) {
       Fill(curr);
       if (!min_.empty()) {
         curr_ = min_.top();
         min_.pop();
+      } else {
+        curr_ = nullptr;
       }
     }
 
-    ConstMapIterator(const ConstMapIterator &) = default;
-    ConstMapIterator &operator=(const ConstMapIterator &) = default;
-    ~ConstMapIterator() = default;
+    ConstMapIterator(const Node* root, const Node *curr) {
+      Fill(root);
+      while (!min_.empty() && curr != curr_) {
+        curr_ = min_.top();
+        min_.pop();
+        if (curr_->right_ != nullptr) {
+          Fill(curr_->right_);
+        }
+      }
+    }
 
+    ConstMapIterator(const ConstMapIterator &it) = default;
+    ConstMapIterator &operator=(const ConstMapIterator &it) = default;
     reference operator*() {
       return curr_->node_pair_;
     }
@@ -145,7 +172,8 @@ class Map {
     }
 
    private:
-    void Fill(const Node *curr) {
+    void Fill(const Node* root) {
+      const Node* curr = root;
       while (curr != nullptr) {
         min_.push(curr);
         curr = curr->left_;
@@ -231,6 +259,7 @@ template<typename K, typename V>
 Map<K, V>::Map(const Map &map) {
   Init();
   Copy(map.root_, root_);
+  length_ = map.length_;
 }
 
 template<typename K, typename V>
@@ -266,12 +295,12 @@ typename Map<K, V>::Iterator Map<K, V>::Find(const K &key) {
 template<typename K, typename V>
 typename Map<K, V>::ConstIterator Map<K, V>::Find(const K &key) const {
   const Node* const_root = root_;
-  const_root = Find(const_root, key);
-  if (const_root == nullptr) {
-    return ConstIterator(nullptr);
+  const Node* found_node = Find(const_root, key);
+  if (found_node == nullptr) {
+    return ConstIterator(const_root, nullptr);
   }
 
-  return ConstIterator(const_root);
+  return ConstIterator(const_root, found_node);
 }
 
 
@@ -413,10 +442,9 @@ void Map<K, V>::Copy(Node *orig_node, Node *&node) {
   }
 
   node = new Node(orig_node->node_pair_, orig_node->left_, orig_node->right_);
-  length_++;
+
   Copy(orig_node->left_, node->left_);
   Copy(orig_node->right_, node->right_);
-
 }
 
 template<typename K, typename V>
@@ -534,7 +562,8 @@ typename Map<K, V>::Iterator Map<K, V>::End() {
 
 template<typename K, typename V>
 typename Map<K, V>::ConstIterator Map<K, V>::CBegin() const {
-  return Map::ConstIterator(root_);
+  const Node* const_root = root_;
+  return Map::ConstIterator(const_root);
 }
 
 template<typename K, typename V>
@@ -547,4 +576,4 @@ size_t Map<K, V>::Size() const {
   return length_;
 }
 
-#endif //SEARCH_ENGINE__MAP_H_
+#endif //SEARCH_ENGINE_MAP_H_

@@ -10,7 +10,8 @@ include_directories(lib/podofo/include)
 set(test_files map_test.cc unordered_map_test.cc)
 set(source_files parser.cc
 tokenizer.cc interface.cc index.cc
-index_handler.cc timer.cc query_processor.cc document.cc
+index_handler.cc timer.cc query_processor.cc
+document.cc ranking_processor.cc
 )
 
 add_library(PORTER_STEMMER_LIB STATIC lib/porter2_stemmer/porter2_stemmer.cpp)

@@ -16,10 +16,10 @@ void Parser::OpenStream(std::string &filename, int id) {
   std::string&& publisher = document["thread"]["site"].GetString();
   std::string&& date_published = document["published"].GetString();
   std::string&& url = document["url"].GetString();
+
   size_t num_words = Parse(text, id);
   Document doc(id, title, text, publisher, date_published, filename, url, num_words);
   index_handler_->AddDocument(counter_, doc);
-
 
   for (auto& m: document["entities"]["persons"].GetArray()) {
     std::string person = m["name"].GetString();
@@ -35,22 +35,23 @@ void Parser::OpenStream(std::string &filename, int id) {
 }
 
 size_t Parser::Parse(std::string &text, int id) {
-  std::unordered_set<std::string> seen_words(1000);
 
-  Tokenizer::WordTokenize(text);
+  if (fast_parsing_) {
+    Tokenizer::WordTokenize(text);
+  } else {
+    Tokenizer::RegexTokenize(text);
+  }
+
   std::stringstream ss(text);
   size_t num_words = 0;
 
   std::string token;
   while (ss >> token) {
-    Porter2Stemmer::stem(token);
     if (stop_words_.find(token) == stop_words_.end()) {
-      if (seen_words.find(token) == seen_words.end()) {
-        index_handler_->AddWordToIndex("words", token, id);
-        ++num_words;
-      }
-      seen_words.insert(token);
+      Porter2Stemmer::stem(token);
+      index_handler_->AddWordToIndex("words", token, id);
     }
+    ++num_words;
   }
 
   return num_words;

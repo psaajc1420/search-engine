@@ -108,10 +108,9 @@ class UnorderedMap {
     using reference = ValueType &;
 
     ConstMapIterator() : map_{nullptr}, node_{nullptr}, bucket_{0} {}
-    ConstMapIterator(const UnorderedMap<K, V> *map, const Node *node, size_t bucket)
-        : map_{map}, node_{node}, bucket_{bucket} {}
     ConstMapIterator(const UnorderedMap<K, V> *map, Node *node, size_t bucket)
         : map_{map}, node_{node}, bucket_{bucket} {}
+
     ConstMapIterator(const UnorderedMap<K, V> *map, bool end)
         : map_{map} {
       if (end) {
@@ -172,6 +171,7 @@ class UnorderedMap {
   using ValueType = std::pair<const K, V>;
   using ValuePointer = ValueType *;
   using ValueReference = ValueType &;
+
   using Iterator = MapIterator<ValueType>;
   using ConstIterator = ConstMapIterator<const ValueType>;
 
@@ -212,13 +212,14 @@ class UnorderedMap {
   size_t GetIndex(const K &) const;
 
   Node *FindNode(size_t bucket, const K &key) const;
-  const Node *FindNode(size_t bucket, const K &key, const Node *&parent) const;
+  Node *FindNode(size_t bucket, const K &key, Node *&parent) const;
 
   static const int kInitialBucketSize_ = 101;
   static const int kMaxLoadPercentage = 70;
   std::vector<Node *> table_;
   size_t num_buckets_;
   size_t size_;
+
 };
 
 template<typename K, typename V>
@@ -293,6 +294,13 @@ template<typename K, typename V>
 V &UnorderedMap<K, V>::operator[](const K &key) {
   size_t loc = GetIndex(key);
   Node *node = table_[loc];
+  while (node != nullptr) {
+    if (node->node_pair_.first == key) {
+      break;
+    }
+    node = node->next_;
+  }
+
   if (node == nullptr) {
     if (size_ > kMaxLoadPercentage * num_buckets_ / 100.0) {
       Rehash();
@@ -389,12 +397,12 @@ typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
 }
 
 template<typename K, typename V>
-const typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
+typename UnorderedMap<K, V>::Node *UnorderedMap<K, V>::FindNode(
     size_t bucket,
     const K &key,
-    const Node *&parent) const {
+    Node *&parent) const {
   parent = nullptr;
-  const Node *curr = table_.at(bucket);
+  Node *curr = table_.at(bucket);
   while (curr != nullptr && key != curr->node_pair_.first) {
     parent = curr;
     curr = curr->next_;

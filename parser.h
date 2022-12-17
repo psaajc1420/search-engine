@@ -28,10 +28,11 @@
 class Parser {
 
  public:
-  Parser() : index_handler_{nullptr}, counter_{0} {}
+  Parser() : index_handler_{nullptr}, counter_{0}, fast_parsing_{true} {}
   explicit Parser(IndexHandler *index_handler,
-                  const std::string& stop_words_filename = "stop_words.txt")
-      : index_handler_{index_handler}, counter_{0} {
+                  const std::string& stop_words_filename = "stop_words.txt",
+                  bool fast_parsing=true)
+      : index_handler_{index_handler}, counter_{0}, fast_parsing_{fast_parsing} {
     stop_words_ = ReadStopWords(stop_words_filename);
   }
   void Traverse(const std::string &);
@@ -45,6 +46,7 @@ class Parser {
   IndexHandler *index_handler_;
   std::unordered_set<std::string> stop_words_;
   int counter_;
+  bool fast_parsing_;
 };
 
 #endif //SEARCH_ENGINE_PARSER_H_

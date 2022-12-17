@@ -5,6 +5,7 @@
 #include "query_processor.h"
 
 void QueryProcessor::Run() {
+  ranking_processor_.SetIndexHandler(index_handler_);
   std::string query = Enter();
   Parse(query);
   Execute();
@@ -64,6 +65,8 @@ void QueryProcessor::DisplayResults() {
   if (results_.empty()) {
     cout << "Sorry no results found. Try a different query" << endl << endl;
   } else {
+    ranking_processor_.CalculateCumulativeRelevancy(results_);
+    sort(results_.begin(), results_.end(), RankingProcessor::RankDocumentByWeight);
     cout << "Search Results: " << endl;
     for (int i = 0; i < 15 && i < results_.size(); i++) {
       cout << i + 1 << ". " << endl;
@@ -81,6 +84,7 @@ void QueryProcessor::AndQuery(std::string& word, const std::string &index_key) {
   if (word_it == index->GetMap().CEnd()) {
     std::cout << "No documents found for " << word << std::endl;
   } else {
+    ranking_processor_.AddRelevancy(word_it->second);
     std::vector<Document> docs;
     for (auto it = word_it->second.CBegin(); it != word_it->second.CEnd(); ++it) {
       docs.push_back(index_handler_->GetDocument(it->first));
@@ -90,8 +94,9 @@ void QueryProcessor::AndQuery(std::string& word, const std::string &index_key) {
     if (results_.empty()) {
       results_ = docs;
     } else {
-      std::set_intersection(results_.begin(), results_.end(),
-                            docs.begin(), docs.end(), results_.begin());
+      auto it = std::set_intersection(results_.begin(), results_.end(),
+                                      docs.begin(), docs.end(), results_.begin());
+      results_.resize(it - results_.begin());
     }
   }
 }
@@ -104,6 +109,7 @@ void QueryProcessor::NotQuery(std::string& word) {
   if (word_it == index->GetMap().CEnd()) {
     std::cout << "No documents found for " << word << std::endl;
   } else {
+    ranking_processor_.AddRelevancy(word_it->second);
     std::vector<Document> docs;
     for (auto it = word_it->second.CBegin(); it != word_it->second.CEnd(); ++it) {
       docs.push_back(index_handler_->GetDocument(it->first));
@@ -113,8 +119,9 @@ void QueryProcessor::NotQuery(std::string& word) {
     if (results_.empty()) {
       results_ = docs;
     } else {
-      std::set_difference(results_.begin(), results_.end(),
-                          docs.begin(), docs.end(), results_.begin());
+      auto it = std::set_difference(results_.begin(), results_.end(),
+                                    docs.begin(), docs.end(), results_.begin());
+      results_.resize(it - results_.begin());
     }
   }
 }
