@@ -273,7 +273,7 @@ typename std::pair<typename UnorderedMap<K, V>::Iterator, bool> UnorderedMap<K,
                                                                              V>::Insert(
     const std::pair<const K, V> &pair) {
   size_t loc = GetIndex(pair.first);
-  Node *node = table_[loc];
+  Node *node = FindNode(loc, pair.first);
   if (node != nullptr) {
     return std::make_pair(Iterator(this, node, loc), false);
   }
@@ -293,13 +293,7 @@ typename std::pair<typename UnorderedMap<K, V>::Iterator, bool> UnorderedMap<K,
 template<typename K, typename V>
 V &UnorderedMap<K, V>::operator[](const K &key) {
   size_t loc = GetIndex(key);
-  Node *node = table_[loc];
-  while (node != nullptr) {
-    if (node->node_pair_.first == key) {
-      break;
-    }
-    node = node->next_;
-  }
+  Node *node = FindNode(loc, key);
 
   if (node == nullptr) {
     if (size_ > kMaxLoadPercentage * num_buckets_ / 100.0) {

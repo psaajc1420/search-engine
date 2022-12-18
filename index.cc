@@ -4,7 +4,7 @@
 
 #include "index.h"
 
-void Index::Add(std::string &word, int id) {
+void Index::Add(std::string &word, size_t id) {
   index_[word][id]++;
 }
 

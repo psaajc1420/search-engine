@@ -3,20 +3,39 @@
 //
 
 #include "map.h"
+#include <ctime>
+#include <cstdlib>
 #include "gtest/gtest.h"
+
+
 
 namespace {
 
 class MapTest : public testing::Test {
  protected:
   void SetUp() override {
+    CreateSmallMap();
+    CreateLargeMap();
+  }
+
+  void CreateSmallMap() {
     std::vector<int> nums = {10, 5, 56, 16, 30, 2};
-    for (int i = 0; i < nums.size(); i++) {
+    for (int i = 0; i < nums.size(); ++i) {
       map_.Insert(std::make_pair(i, nums[i]));
     }
   }
 
+  void CreateLargeMap() {
+    std::vector<int> rand_nums;
+    srand(time(nullptr));
+    for (int i = 0; i < 10000; ++i) {
+      int rand_num = rand() % 100;
+      large_map_.Insert(std::make_pair(rand_num, i));
+    }
+  }
+
   Map<int, int> map_;
+  Map<int, int> large_map_;
 };
 
 TEST_F(MapTest, DefaultConstructor) {
@@ -117,7 +136,17 @@ TEST_F(MapTest, Begin) {
 }
 
 TEST_F(MapTest, End) {
+  size_t count = 0;
+  for (auto it = map_.Begin(); it != map_.End(); ++it) {
+    ++count;
+  }
+  EXPECT_EQ(count, map_.Size());
 
+  count = 0;
+  for (auto it = large_map_.Begin(); it != large_map_.End(); ++it) {
+    ++count;
+  }
+  EXPECT_EQ(count, large_map_.Size());
 }
 
 
@@ -128,7 +157,17 @@ TEST_F(MapTest, CBegin) {
 }
 
 TEST_F(MapTest, CEnd) {
+  size_t count = 0;
+  for (auto it = map_.CBegin(); it != map_.CEnd(); ++it) {
+    ++count;
+  }
+  EXPECT_EQ(count, map_.Size());
 
+  count = 0;
+  for (auto it = large_map_.CBegin(); it != large_map_.CEnd(); ++it) {
+    ++count;
+  }
+  EXPECT_EQ(count, large_map_.Size());
 }
 
 }

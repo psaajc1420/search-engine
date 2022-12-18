@@ -24,7 +24,7 @@ class IndexHandler {
   IndexHandler() = default;
   explicit IndexHandler(std::string document_file)
       : document_file_{std::move(document_file)},
-        id_to_filename_map_{UnorderedMap<int, Document>(500000)} {}
+        id_to_filename_map_{UnorderedMap<size_t, Document>(500000)} {}
   ~IndexHandler() {
     for (auto it = indexes_.Begin(); it != indexes_.End(); ++it) {
       delete it->second;
@@ -35,16 +35,16 @@ class IndexHandler {
   void ClearIndexes();
   void ReadIndexes();
   void WriteIndexes();
-  void AddWordToIndex(const std::string&, std::string&, int);
-  void AddDocument(int, Document&);
-  Document GetDocument(int);
+  void AddWordToIndex(const std::string&, std::string&, size_t);
+  void AddDocument(size_t, Document&);
+  Document GetDocument(size_t);
   [[nodiscard]] size_t GetNumDocuments() const;
   void ReadDocuments();
   void WriteDocuments();
 
  private:
   std::string document_file_;
-  UnorderedMap<int, Document> id_to_filename_map_;
+  UnorderedMap<size_t, Document> id_to_filename_map_;
   UnorderedMap<std::string, Index *> indexes_;
 };
 

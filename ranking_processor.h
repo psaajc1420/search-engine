@@ -7,6 +7,7 @@
 
 #include "document.h"
 #include "unordered_map.h"
+#include "map.h"
 #include "index_handler.h"
 
 #include <cmath>
@@ -17,7 +18,7 @@ class RankingProcessor {
  public:
   RankingProcessor() : index_handler_{nullptr} {}
   void SetIndexHandler(IndexHandler*&);
-  void AddRelevancy(const UnorderedMap<int, int>&);
+  void AddRelevancy(const UnorderedMap<size_t, size_t>&);
   void CalculateCumulativeRelevancy(std::vector<Document>&);
   static bool RankDocumentByWeight(const Document&, const Document&);
  private:

@@ -20,13 +20,13 @@
 
 class Index {
 
-  using InvertedMap = Map<std::string, UnorderedMap<int, int>>;
-  using InvertedMapIterator = Map<std::string, UnorderedMap<int, int>>::ConstIterator;
-  using ConstInvertedMap = const Map<std::string, UnorderedMap<int, int>>;
+  using InvertedMap = Map<std::string, UnorderedMap<size_t, size_t>>;
+  using InvertedMapIterator = Map<std::string, UnorderedMap<size_t, size_t>>::ConstIterator;
+  using ConstInvertedMap = const Map<std::string, UnorderedMap<size_t, size_t>>;
  public:
   Index() = default;
   explicit Index(std::string filename) : filename_{std::move(filename)} {}
-  void Add(std::string&, int);
+  void Add(std::string&, size_t);
   void Read();
   void Write();
   void Clear();

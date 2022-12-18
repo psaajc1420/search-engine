@@ -28,24 +28,23 @@
 class Parser {
 
  public:
-  Parser() : index_handler_{nullptr}, counter_{0}, fast_parsing_{true} {}
+  Parser() : index_handler_{nullptr}, document_id_{0}, fast_parsing_{true} {}
   explicit Parser(IndexHandler *index_handler,
                   const std::string& stop_words_filename = "stop_words.txt",
                   bool fast_parsing=true)
-      : index_handler_{index_handler}, counter_{0}, fast_parsing_{fast_parsing} {
+      : index_handler_{index_handler}, document_id_{0}, fast_parsing_{fast_parsing} {
     stop_words_ = ReadStopWords(stop_words_filename);
   }
   void Traverse(const std::string &);
   static std::unordered_set<std::string> ReadStopWords(const std::string &);
 
  private:
-  void OpenStream(std::string &, int);
-  size_t Parse(std::string &, int);
+  void OpenStream(std::string &);
+  size_t Parse(std::string &);
 
-  Tokenizer tokenizer_;
   IndexHandler *index_handler_;
   std::unordered_set<std::string> stop_words_;
-  int counter_;
+  size_t document_id_;
   bool fast_parsing_;
 };
 

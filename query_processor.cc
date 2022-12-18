@@ -15,7 +15,6 @@ void QueryProcessor::Run() {
 void QueryProcessor::Parse(std::string& query) {
 
   auto stop_words = Parser::ReadStopWords(stop_words_filename_);
-  Tokenizer::WordTokenize(query);
   std::cout << query << std::endl;
 
   std::stringstream ss(query);
@@ -49,10 +48,10 @@ void QueryProcessor::Execute() {
       NotQuery(not_word);
     } else if (person_filename_found != std::string::npos) {
       std::string person = word.substr(7);
-      AndQuery(person, "persons");
+      AndQuery(person, "persons", false);
     } else if (org_filename_found != std::string::npos) {
       std::string person = word.substr(4);
-      AndQuery(person, "orgs");
+      AndQuery(person, "orgs", false);
     } else {
       AndQuery(word, "words");
     }
@@ -76,8 +75,8 @@ void QueryProcessor::DisplayResults() {
   }
 }
 
-void QueryProcessor::AndQuery(std::string& word, const std::string &index_key) {
-  Porter2Stemmer::stem(word);
+void QueryProcessor::AndQuery(std::string& word, const std::string &index_key, bool stem) {
+  if (stem) Porter2Stemmer::stem(word);
   const Index* index = index_handler_->GetIndex(index_key);
   auto word_it = index->Find(word);
 

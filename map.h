@@ -267,6 +267,7 @@ Map<K, V> &Map<K, V>::operator=(const Map &map) {
   if (this != &map) {
     Clear();
     Copy(map.root_, root_);
+    length_ = map.length_;
   }
   return *this;
 }

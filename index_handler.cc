@@ -4,11 +4,11 @@
 
 #include "index_handler.h"
 
-void IndexHandler::AddDocument(int id, Document &document) {
+void IndexHandler::AddDocument(size_t id, Document &document) {
   id_to_filename_map_[id] = document;
 }
 
-Document IndexHandler::GetDocument(int id) {
+Document IndexHandler::GetDocument(size_t id) {
   return id_to_filename_map_[id];
 }
 
@@ -16,7 +16,7 @@ size_t IndexHandler::GetNumDocuments() const {
   return id_to_filename_map_.Size();
 }
 
-void IndexHandler::AddWordToIndex(const std::string &key, std::string &word, int id) {
+void IndexHandler::AddWordToIndex(const std::string &key, std::string &word, size_t id) {
   indexes_[key]->Add(word, id);
 }
 

@@ -5,6 +5,8 @@
 #ifndef SEARCH_ENGINE_DOCUMENT_H_
 #define SEARCH_ENGINE_DOCUMENT_H_
 
+#include <cstdio>
+#include <ctime>
 #include <iostream>
 #include <string>
 

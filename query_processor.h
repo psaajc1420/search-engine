@@ -32,7 +32,7 @@ class QueryProcessor {
   void Parse(std::string&);
   void Execute();
   void DisplayResults();
-  void AndQuery(std::string&, const std::string&);
+  void AndQuery(std::string&, const std::string&, bool = true);
   void NotQuery(std::string&);
   static std::string Enter();
 

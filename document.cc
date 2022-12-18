@@ -106,12 +106,21 @@ bool operator==(const Document &lhs, const Document &rhs) {
 
 std::ostream &operator<<(std::ostream &out, Document &doc) {
   using std::endl;
+
   out << doc.title_ << endl;
   out << doc.publisher_ << endl;
-  out << doc.date_published_ << endl;
+
+  tm* ctime = new tm;
+  char date_time[80];
+  strptime(doc.date_published_.c_str(), "%FT%T%z", &*ctime);
+  strftime (date_time, 80, "%D, %r", ctime);
+  out << date_time << endl;
+  delete ctime;
+
   out << doc.file_location_ << endl;
   out << doc.url_ << endl;
   out << doc.weight_ << endl;
+
   return out;
 }
 

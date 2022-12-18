@@ -8,7 +8,7 @@ void RankingProcessor::SetIndexHandler(IndexHandler *&index_handler) {
   index_handler_ = index_handler;
 }
 
-void RankingProcessor::AddRelevancy(const UnorderedMap<int, int> & doc_map) {
+void RankingProcessor::AddRelevancy(const UnorderedMap<size_t, size_t> & doc_map) {
   auto total_num_documents = static_cast<double>(index_handler_->GetNumDocuments());
   auto num_documents = static_cast<double>(doc_map.Size());
   double idf = log(total_num_documents / (1.0 + num_documents)) + 1.0;
@@ -30,6 +30,8 @@ void RankingProcessor::CalculateCumulativeRelevancy(std::vector<Document>& docs)
         prod *= weight;
       }
       doc.SetWeight(prod);
+    } else {
+      std::cout << "Doc not found" << std::endl;
     }
   }
 }
