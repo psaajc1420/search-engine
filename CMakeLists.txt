@@ -7,17 +7,32 @@ include_directories(lib)
 include_directories(lib/porter2_stemmer)
 include_directories(lib/podofo/include)
 
-set(test_files map_test.cc unordered_map_test.cc)
-set(source_files parser.cc
-tokenizer.cc interface.cc index.cc
-index_handler.cc timer.cc query_processor.cc
-document.cc ranking_processor.cc
+# set important directories to variables
+set(search_engine_bin_dir "${CMAKE_SOURCE_DIR}/bin")
+set(search_engine_build_include_dirs "${CMAKE_SOURCE_DIR}/src")
+
+set(test_files
+    src/search-engine/map_test.cc
+    src/search-engine/unordered_map_test.cc
+)
+set(source_files
+    src/search-engine/parser.cc
+    src/search-engine/tokenizer.cc
+    src/search-engine/interface.cc
+    src/search-engine/index.cc
+    src/search-engine/index_handler.cc
+    src/search-engine/timer.cc
+    src/search-engine/query_processor.cc
+    src/search-engine/document.cc
+    src/search-engine/ranking_processor.cc
 )
 
-add_library(PORTER_STEMMER_LIB STATIC lib/porter2_stemmer/porter2_stemmer.cpp)
-target_include_directories(PORTER_STEMMER_LIB PUBLIC ${PROJECT_SOURCE_DIR}/lib/porter2_stemmer)
-add_executable(search_engine main.cc ${source_files})
-target_link_libraries(search_engine PRIVATE PORTER_STEMMER_LIB)
+include_directories(${search_engine_build_include_dirs})
+
+add_library(porter_stemmer_lib STATIC lib/porter2_stemmer/porter2_stemmer.cpp)
+target_include_directories(porter_stemmer_lib PUBLIC ${PROJECT_SOURCE_DIR}/lib/porter2_stemmer)
+add_executable(search_engine src/search-engine/main.cc ${source_files})
+target_link_libraries(search_engine PRIVATE porter_stemmer_lib)
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -54,4 +69,14 @@ endif()
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(tests ${test_files})
 target_link_libraries(tests gtest_main)
+
+set_target_properties(tests
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${search_engine_bin_dir}"
+)
+
+set_target_properties(search_engine
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${search_engine_bin_dir}"
+)
 
