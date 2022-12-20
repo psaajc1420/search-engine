@@ -44,21 +44,25 @@ GNU Make as build tool, the typical workflow is:
 1. Get the source code and change to it. e.g., cloning with git:
 
 ```bash
-git clone https://github.com/psaajc1420/search-engine.git
-cd search-engine 
+git clone https://github.com/psaajc1420/search-engine.git && cd search-engine
 ```  
 
-2. Create build folder and run CMake to configure the build tree.
+2. Create build folder and change directory into that folder
 
 ```bash
 mkdir cmake-build-release && cd cmake-build-release
+```
+
+3. Afterwards, use CMake to configure the build tree then build the project by executing the make command
+```bash
 cmake .. -DCMAKE_BUILD_TYPE=Release && make
 ```
 
-3. Afterwards, generated files can be used to compile the project.
+4. Then you can run the project i.e.,
 ```bash
 ./search_engine stop_words.txt /path/to/corpus-data
 ```
+
 
 ## Project Structure
 
