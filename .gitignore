@@ -3,6 +3,8 @@ cmake-build-release/
 cmake-build-debug-coverage
 cmake-build-release-coverage/
 cmake-build-relwithdebinfo/
+
 .idea/
-stop_words.txt
 bin/
+
+*.txt
